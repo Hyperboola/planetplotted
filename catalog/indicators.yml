@@ -1,18 +1,87 @@
-# Catalogo degli indicatori.
-# topic: economy, people, technology, energy, education
+# Catalogo degli indicatori (World Bank, World Development Indicators).
+#
+# topic: uno dei 14 temi usati in catalog/schedule.yml
 # additive: true solo se i valori dei paesi si possono sommare
-# max_age: quanti anni al massimo può essere vecchio il dato
+#           (serve al formato "the world in one chart")
+# max_age: quanti anni al massimo può essere vecchio il dato per essere pubblicato
+# below_half_phrase: frase per "In X of N countries and territories, ..." (solo % sensate)
+#
+# Prima di lanciare la pipeline con indicatori nuovi:
+#     python -m sources.check_catalog
 
 indicators:
-  - {id: population, source: worldbank, code: SP.POP.TOTL, name: Population, unit: people, topic: people, max_age: 3, additive: true}
-  - {id: fertility, source: worldbank, code: SP.DYN.TFRT.IN, name: Fertility rate, unit: births per woman, topic: people, max_age: 4}
-  - {id: life_expectancy, source: worldbank, code: SP.DYN.LE00.IN, name: Life expectancy at birth, unit: years, topic: people, max_age: 4}
+  # --- Economy -------------------------------------------------------------
   - {id: gdp_total, source: worldbank, code: NY.GDP.MKTP.CD, name: GDP, unit: current US$, topic: economy, max_age: 3, additive: true}
   - {id: gdp_per_capita, source: worldbank, code: NY.GDP.PCAP.CD, name: GDP per capita, unit: current US$, topic: economy, max_age: 3}
+  - {id: gdp_per_capita_ppp, source: worldbank, code: NY.GDP.PCAP.PP.CD, name: GDP per capita (PPP), unit: current international $, topic: economy, max_age: 3}
+  - {id: gdp_growth, source: worldbank, code: NY.GDP.MKTP.KD.ZG, name: GDP growth, unit: "% per year", topic: economy, max_age: 3}
   - {id: inflation, source: worldbank, code: FP.CPI.TOTL.ZG, name: Inflation, consumer prices, unit: "% per year", topic: economy, max_age: 3}
-  - {id: internet_users, source: worldbank, code: IT.NET.USER.ZS, name: Internet users, unit: "% of population", topic: technology, max_age: 4}
-  - {id: mobile_subscriptions, source: worldbank, code: IT.CEL.SETS.P2, name: Mobile subscriptions, unit: per 100 people, topic: technology, max_age: 4}
-  - {id: electricity_access, source: worldbank, code: EG.ELC.ACCS.ZS, name: Access to electricity, unit: "% of population", topic: energy, max_age: 5}
-  - {id: renewables_share, source: worldbank, code: EG.FEC.RNEW.ZS, name: Renewable energy share, unit: "% of final energy use", topic: energy, max_age: 5}
+
+  # --- Trade ---------------------------------------------------------------
+  - {id: exports_total, source: worldbank, code: NE.EXP.GNFS.CD, name: Exports of goods and services, unit: current US$, topic: trade, max_age: 3, additive: true}
+  - {id: trade_share, source: worldbank, code: NE.TRD.GNFS.ZS, name: Trade, unit: "% of GDP", topic: trade, max_age: 3}
+  - {id: remittances, source: worldbank, code: BX.TRF.PWKR.DT.GD.ZS, name: Remittances received, unit: "% of GDP", topic: trade, max_age: 3}
+
+  # --- Work ----------------------------------------------------------------
+  - {id: unemployment, source: worldbank, code: SL.UEM.TOTL.ZS, name: Unemployment, unit: "% of labor force", topic: work, max_age: 3}
+  - {id: youth_unemployment, source: worldbank, code: SL.UEM.1524.ZS, name: Youth unemployment, unit: "% of labor force aged 15-24", topic: work, max_age: 3}
+  - {id: agriculture_jobs, source: worldbank, code: SL.AGR.EMPL.ZS, name: Employment in agriculture, unit: "% of total employment", topic: work, max_age: 3}
+  - {id: services_jobs, source: worldbank, code: SL.SRV.EMPL.ZS, name: Employment in services, unit: "% of total employment", topic: work, max_age: 3, below_half_phrase: "fewer than half of workers are in services"}
+
+  # --- People --------------------------------------------------------------
+  - {id: population, source: worldbank, code: SP.POP.TOTL, name: Population, unit: people, topic: people, max_age: 3, additive: true}
+  - {id: population_growth, source: worldbank, code: SP.POP.GROW, name: Population growth, unit: "% per year", topic: people, max_age: 3}
+  - {id: fertility, source: worldbank, code: SP.DYN.TFRT.IN, name: Fertility rate, unit: births per woman, topic: people, max_age: 4}
+  - {id: aged_65_plus, source: worldbank, code: SP.POP.65UP.TO.ZS, name: Population aged 65 and over, unit: "% of population", topic: people, max_age: 3}
+  - {id: aged_0_14, source: worldbank, code: SP.POP.0014.TO.ZS, name: Population aged 0-14, unit: "% of population", topic: people, max_age: 3}
+  - {id: density, source: worldbank, code: EN.POP.DNST, name: Population density, unit: people per km², topic: people, max_age: 4}
+
+  # --- Health --------------------------------------------------------------
+  - {id: life_expectancy, source: worldbank, code: SP.DYN.LE00.IN, name: Life expectancy at birth, unit: years, topic: health, max_age: 4}
+  - {id: infant_mortality, source: worldbank, code: SP.DYN.IMRT.IN, name: Infant mortality, unit: per 1000 live births, topic: health, max_age: 4}
+  - {id: maternal_mortality, source: worldbank, code: SH.STA.MMRT, name: Maternal mortality, unit: per 100000 live births, topic: health, max_age: 5}
+  - {id: health_spending_pc, source: worldbank, code: SH.XPD.CHEX.PC.CD, name: Health spending per person, unit: current US$, topic: health, max_age: 5}
+  - {id: health_spending_gdp, source: worldbank, code: SH.XPD.CHEX.GD.ZS, name: Health spending, unit: "% of GDP", topic: health, max_age: 5}
+  - {id: smoking, source: worldbank, code: SH.PRV.SMOK, name: Smoking prevalence, unit: "% of adults", topic: health, max_age: 5}
+
+  # --- Education -----------------------------------------------------------
   - {id: tertiary_enrollment, source: worldbank, code: SE.TER.ENRR, name: University enrollment, unit: "% gross", topic: education, max_age: 5}
+  - {id: secondary_enrollment, source: worldbank, code: SE.SEC.ENRR, name: Secondary school enrollment, unit: "% gross", topic: education, max_age: 5}
+  - {id: primary_completion, source: worldbank, code: SE.PRM.CMPT.ZS, name: Primary school completion, unit: "% of relevant age group", topic: education, max_age: 5}
   - {id: education_spending, source: worldbank, code: SE.XPD.TOTL.GD.ZS, name: Public spending on education, unit: "% of GDP", topic: education, max_age: 5}
+
+  # --- Technology ----------------------------------------------------------
+  - {id: internet_users, source: worldbank, code: IT.NET.USER.ZS, name: Internet users, unit: "% of population", topic: technology, max_age: 4, below_half_phrase: "fewer than half the population is online"}
+  - {id: mobile_subscriptions, source: worldbank, code: IT.CEL.SETS.P2, name: Mobile subscriptions, unit: per 100 people, topic: technology, max_age: 4}
+  - {id: broadband, source: worldbank, code: IT.NET.BBND.P2, name: Fixed broadband subscriptions, unit: per 100 people, topic: technology, max_age: 4}
+  - {id: rnd_spending, source: worldbank, code: GB.XPD.RSDV.GD.ZS, name: Research and development spending, unit: "% of GDP", topic: technology, max_age: 5}
+  - {id: patents, source: worldbank, code: IP.PAT.RESD, name: Patent applications by residents, unit: applications, topic: technology, max_age: 5, additive: true}
+  - {id: hightech_exports, source: worldbank, code: TX.VAL.TECH.MF.ZS, name: High-tech exports, unit: "% of manufactured exports", topic: technology, max_age: 4}
+
+  # --- Energy --------------------------------------------------------------
+  - {id: electricity_access, source: worldbank, code: EG.ELC.ACCS.ZS, name: Access to electricity, unit: "% of population", topic: energy, max_age: 5, below_half_phrase: "fewer than half the population has electricity"}
+  - {id: renewables_share, source: worldbank, code: EG.FEC.RNEW.ZS, name: Renewable energy share, unit: "% of final energy use", topic: energy, max_age: 5, below_half_phrase: "renewables are less than half of energy use"}
+  - {id: clean_cooking, source: worldbank, code: EG.CFT.ACCS.ZS, name: Access to clean cooking fuels, unit: "% of population", topic: energy, max_age: 5, below_half_phrase: "fewer than half the population cooks with clean fuels"}
+
+  # --- Environment ---------------------------------------------------------
+  - {id: co2_per_capita, source: worldbank, code: EN.GHG.CO2.PC.CE.AR5, name: CO2 emissions per person, unit: t CO2e per person, topic: environment, max_age: 4}
+  - {id: ghg_total, source: worldbank, code: EN.GHG.ALL.MT.CE.AR5, name: Greenhouse gas emissions, unit: Mt CO2e, topic: environment, max_age: 4, additive: true}
+  - {id: forest_area, source: worldbank, code: AG.LND.FRST.ZS, name: Forest area, unit: "% of land area", topic: environment, max_age: 5}
+  - {id: pm25, source: worldbank, code: EN.ATM.PM25.MC.M3, name: Air pollution (PM2.5), unit: µg per m³, topic: environment, max_age: 6}
+
+  # --- Cities --------------------------------------------------------------
+  - {id: urban_population, source: worldbank, code: SP.URB.TOTL.IN.ZS, name: Urban population, unit: "% of population", topic: cities, max_age: 3, below_half_phrase: "fewer than half the population lives in cities"}
+  - {id: largest_city_share, source: worldbank, code: EN.URB.LCTY.UR.ZS, name: Population in the largest city, unit: "% of urban population", topic: cities, max_age: 3}
+
+  # --- Gender --------------------------------------------------------------
+  - {id: women_parliament, source: worldbank, code: SG.GEN.PARL.ZS, name: Women in parliament, unit: "% of seats", topic: gender, max_age: 3}
+  - {id: female_labor, source: worldbank, code: SL.TLF.CACT.FE.ZS, name: Women in the labor force, unit: "% of women aged 15+", topic: gender, max_age: 3, below_half_phrase: "fewer than half of women are in the labor force"}
+
+  # --- Food ----------------------------------------------------------------
+  - {id: cereal_production, source: worldbank, code: AG.PRD.CREL.MT, name: Cereal production, unit: metric tons, topic: food, max_age: 4, additive: true}
+  - {id: agricultural_land, source: worldbank, code: AG.LND.AGRI.ZS, name: Agricultural land, unit: "% of land area", topic: food, max_age: 5}
+  - {id: undernourishment, source: worldbank, code: SN.ITK.DEFC.ZS, name: Undernourishment, unit: "% of population", topic: food, max_age: 5}
+
+  # --- Finance -------------------------------------------------------------
+  - {id: bank_account, source: worldbank, code: FX.OWN.TOTL.ZS, name: Adults with an account, unit: "% of adults", topic: finance, max_age: 4, below_half_phrase: "fewer than half of adults have an account"}
+  - {id: domestic_credit, source: worldbank, code: FS.AST.PRVT.GD.ZS, name: Credit to the private sector, unit: "% of GDP", topic: finance, max_age: 4}

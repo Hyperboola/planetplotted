@@ -2,13 +2,15 @@
 # i numeri del post già formattati: non scrivere mai cifre a mano.
 # Ogni formato ha più varianti; il post ne usa una in base al suo id.
 # Campi: title (copertina / primo fotogramma), subtitle, reveal (solo ranked),
-# closing (ultima slide), caption (didascalia Instagram).
+# closing (ultima slide), context (frase di contesto, solo ranked),
+# caption (didascalia Instagram).
 
 ranked:
   - title: "Where is {indicator_lc} highest?"
     subtitle: "{indicator}, {unit} · {year} · Top 10 of {n_countries} countries"
     reveal: "#1: {top1_label}"
     closing: "Last place: {last_name}, {last_value}"
+    context: "{context_line}"
     caption: |
       #1 in {indicator_lc}: {top1_label} ({top1_value}).
       At the bottom of {n_countries} countries: {last_name}, {last_value}.
@@ -17,6 +19,7 @@ ranked:
     subtitle: "{indicator}, {unit} · {year}"
     reveal: "And #1 is… {top1_label}"
     closing: "At the other end: {last_name}, {last_value}"
+    context: "{context_line}"
     caption: |
       Ranked: {indicator_lc} across {n_countries} countries in {year}.
       Top spot: {top1_label} with {top1_value}.
@@ -25,6 +28,7 @@ ranked:
     subtitle: "{indicator}, {unit} · {year}"
     reveal: "#1: {top1_label}"
     closing: "Lowest of all: {last_name}, {last_value}"
+    context: "{context_line}"
     caption: |
       #1: {top1_label}, {top1_value}. Last: {last_name}, {last_value}.
       Data for {n_countries} countries, {year}. Source: {source_name} ({source_code}).
@@ -32,6 +36,7 @@ ranked:
     subtitle: "{unit} · {year} · {n_countries} countries"
     reveal: "#1: {top1_label}"
     closing: "And last: {last_name}, {last_value}"
+    context: "{context_line}"
     caption: |
       Where does your country rank? #1 is {top1_label} ({top1_value}).
       Source: {source_name} ({source_code}), {year}.
@@ -56,6 +61,27 @@ the_gap:
       Same planet, {ratio} apart. {indicator} in {year}: {highest} {highest_value}, {lowest} {lowest_value}.
       Source: {source_name} ({source_code}).
 
+# Usato per le percentuali: il divario si esprime in punti, non come rapporto
+the_gap_points:
+  - title: "{indicator}: from {lowest_value} to {highest_value}"
+    subtitle: "{lowest} vs {highest} · {year}"
+    closing: "A gap of {gap_points}"
+    caption: |
+      {highest}: {highest_value}. {lowest}: {lowest_value}. A gap of {gap_points}.
+      {indicator}, {year}. {scope_note}. Source: {source_name} ({source_code}).
+  - title: "A {gap_points_short} gap in {indicator_lc}"
+    subtitle: "{highest} vs {lowest} · {year}"
+    closing: "{highest}: {highest_value} · {lowest}: {lowest_value}"
+    caption: |
+      The widest {indicator_lc} gap: {highest} ({highest_value}) vs {lowest} ({lowest_value}).
+      {scope_note}. Source: {source_name} ({source_code}), {year}.
+  - title: "{highest} vs {lowest}: the {indicator_lc} gap"
+    subtitle: "{highest_value} vs {lowest_value} · {year}"
+    closing: "A gap of {gap_points}"
+    caption: |
+      Same planet, {gap_points} apart. {indicator}, {year}.
+      {scope_note}. Source: {source_name} ({source_code}).
+      
 # Usato quando il rapporto non ha senso (valori zero o negativi)
 the_gap_diff:
   - title: "{indicator}: from {highest_value} to {lowest_value}"

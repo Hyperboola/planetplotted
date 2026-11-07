@@ -5,13 +5,16 @@ slots:
   - {time: "17:00", media: carousel}
 
 no_repeat_days: 7   # un indicatore non torna prima di 7 giorni
+gap_min_population: 1000000   # The Gap: solo paesi con almeno 1 milione di abitanti
 
-# [formato, tema] per ogni slot
+# [formato, tema] per ogni slot: 14 post a settimana, 14 temi diversi.
+# "world_in_one_chart" solo su temi con indicatori additive (trade, food,
+# people, economy, technology, environment).
 week:
-  mon: [[ranked, economy],     [mapped, people]]
-  tue: [[then_vs_now, technology], [the_gap, economy]]
-  wed: [[ranked, people],      [world_in_one_chart, economy]]
-  thu: [[then_vs_now, energy], [mapped, education]]
-  fri: [[ranked, technology],  [the_gap, people]]
-  sat: [[then_vs_now, people], [world_in_one_chart, energy]]
-  sun: [[ranked, education],   [mapped, economy]]
+  mon: [[ranked, economy],        [mapped, health]]
+  tue: [[then_vs_now, technology], [the_gap, work]]
+  wed: [[ranked, people],         [world_in_one_chart, trade]]
+  thu: [[then_vs_now, energy],    [mapped, education]]
+  fri: [[ranked, gender],         [the_gap, environment]]
+  sat: [[then_vs_now, cities],    [world_in_one_chart, food]]
+  sun: [[ranked, health],         [mapped, finance]]

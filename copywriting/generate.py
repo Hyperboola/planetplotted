@@ -49,8 +49,11 @@ def resolve(copy: dict, vals: dict) -> dict:
 
 def pick_template(templates: dict, fmt: str, vals: dict, post_id: int) -> dict:
     group = fmt
-    if fmt == "the_gap" and "ratio" not in vals:
-        group = "the_gap_diff"
+    if fmt == "the_gap":
+        if "gap_points" in vals:
+            group = "the_gap_points"   # percentuali: differenza in punti
+        elif "ratio" not in vals:
+            group = "the_gap_diff"     # valori negativi: niente rapporto
     variants = templates[group]
     return dict(variants[post_id % len(variants)])
 

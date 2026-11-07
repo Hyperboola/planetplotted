@@ -19,14 +19,28 @@ def _big(v: float) -> str:
 def fmt_value(value: float, unit: str, exact: bool = False) -> str:
     """exact=True mostra la cifra intera (per le slide con i numeri esatti)."""
     if unit.startswith("%"):
-        return f"{value:.1f}%"
-    if unit == "people":
-        return f"{value:,.0f}" if exact else _big(value)
-    if "US$" in unit:
+        # 0.04% non deve diventare "0.0%": sembrerebbe uno zero
+        return f"{value:.2f}%" if 0 < abs(value) < 0.1 else f"{value:.1f}%"
+    if "$" in unit:
         return f"${value:,.0f}" if exact or abs(value) < 1e6 else "$" + _big(value)
     if unit == "years":
         return f"{value:.1f} years"
+    if 0 < abs(value) < 1:
+        return f"{value:.2g}"  # due cifre significative: 0.045, non 0.0
+    if exact:
+        return f"{value:,.0f}" if abs(value) >= 1000 else f"{value:,.1f}"
+    if abs(value) >= 1e6:
+        return _big(value)
+    if abs(value) >= 1000:
+        return f"{value:,.0f}"
     return f"{value:,.1f}"
+
+
+def with_unit(text: str, unit: str) -> str:
+    """Aggiunge l'unità ai valori che non la mostrano già (% , $, years)."""
+    if unit.startswith("%") or "$" in unit or unit == "years":
+        return text
+    return f"{text} {unit}"
 
 
 def fmt_ratio(r: float) -> str:
@@ -35,6 +49,11 @@ def fmt_ratio(r: float) -> str:
     if r >= 10:
         return f"{r:.0f}×"
     return f"{r:.1f}×"
+
+
+def fmt_count(x: float) -> str:
+    """1000000 -> '1M', 500000 -> '500,000'"""
+    return f"{x / 1e6:g}M" if x >= 1e6 else f"{x:,.0f}"
 
 
 def fmt_share(s: float) -> str:

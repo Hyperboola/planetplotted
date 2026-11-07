@@ -1,0 +1,36 @@
+# Nomi da mostrare nei post e sul sito, al posto dei nomi ufficiali World Bank.
+# Chiave: codice iso3. Il nome ufficiale resta nella colonna countries.name.
+# Per trovare altri nomi da sistemare:
+#   SELECT iso3, name FROM countries WHERE name ~ '[,()]' OR name LIKE '%Rep.%';
+
+EGY: Egypt
+KOR: South Korea
+PRK: North Korea
+IRN: Iran
+COD: DR Congo
+COG: Republic of the Congo
+GMB: The Gambia
+BHS: The Bahamas
+VEN: Venezuela
+YEM: Yemen
+SOM: Somalia
+HKG: Hong Kong
+MAC: Macao
+LAO: Laos
+KGZ: Kyrgyzstan
+SVK: Slovakia
+RUS: Russia
+SYR: Syria
+VNM: Vietnam
+FSM: Micronesia
+BRN: Brunei
+CIV: Côte d'Ivoire
+STP: São Tomé and Príncipe
+KNA: Saint Kitts and Nevis
+LCA: Saint Lucia
+VCT: Saint Vincent and the Grenadines
+MAF: Saint Martin
+SXM: Sint Maarten
+CUW: Curaçao
+VIR: US Virgin Islands
+TUR: Türkiye

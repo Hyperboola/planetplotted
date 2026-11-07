@@ -4,6 +4,7 @@ Funzioni "pure": ricevono le righe di un indicatore e restituiscono
 il payload del post. Nessun valore viene stimato o interpolato:
 si usano solo dati presenti nel database.
 """
+import statistics
 
 from collections import defaultdict
 
@@ -38,11 +39,15 @@ def _item(r):
 
 def ranked(rows, year, top=10, bottom=5):
     data = sorted(_year_rows(rows, year), key=lambda r: r["value"], reverse=True)
+    vals = [r["value"] for r in data]
     return {
         "year": year,
         "n_countries": len(data),
         "top": [_item(r) for r in data[:top]],
         "bottom": [_item(r) for r in data[-bottom:]],
+        # Contesto per l'ultima slide, calcolato su tutti i paesi dell'anno
+        "median": statistics.median(vals),
+        "below_half": sum(1 for x in vals if x < 50),  # usato solo per le percentuali
     }
 
 
@@ -106,17 +111,38 @@ def world_in_one_chart(rows, year, top=15):
     }
 
 
-def the_gap(rows, year):
-    data = sorted(_year_rows(rows, year), key=lambda r: r["value"], reverse=True)
+def the_gap(rows, year, unit="", population=None, min_population=0):
+    """Il più alto e il più basso, con regole contro gli estremi fuorvianti:
+    - i valori esattamente zero sono esclusi (spesso sono dati mancanti);
+    - con population, restano solo i paesi con almeno min_population abitanti,
+      perché nei microstati i valori pro capite sono instabili;
+    - per le percentuali niente rapporto: si usa la differenza in punti."""
+    data = _year_rows(rows, year)
+    zeros = sum(1 for r in data if r["value"] == 0)
+    data = [r for r in data if r["value"] != 0]
+    small = 0
+    if population is not None and min_population:
+        keep = [r for r in data if population.get(r["iso3"], 0) >= min_population]
+        small, data = len(data) - len(keep), keep
+    if len(data) < 2:
+        return None
+    data.sort(key=lambda r: r["value"], reverse=True)
     hi, lo = data[0], data[-1]
-    ratio = hi["value"] / lo["value"] if hi["value"] > 0 and lo["value"] > 0 else None
+    points = unit.startswith("%")
+    ratio = None
+    if not points and hi["value"] > 0 and lo["value"] > 0:
+        ratio = hi["value"] / lo["value"]
     return {
         "year": year,
         "n_countries": len(data),
         "highest": _item(hi),
         "lowest": _item(lo),
         "difference": hi["value"] - lo["value"],
-        "ratio": ratio,  # None se ci sono valori zero o negativi
+        "ratio": ratio,          # None per le percentuali o con valori negativi
+        "points": points,        # True: il divario si esprime in punti percentuali
+        "excluded_zero": zeros,
+        "excluded_small": small,
+        "min_population": min_population,
     }
 
 

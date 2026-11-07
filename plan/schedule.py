@@ -68,7 +68,7 @@ def _connect():
 
 def fetch_rows(cur, indicator_id):
     cur.execute("""
-        SELECT o.iso3, c.name, o.year, o.value
+        SELECT o.iso3, COALESCE(c.display_name, c.name), o.year, o.value
         FROM observations o JOIN countries c USING (iso3)
         WHERE o.indicator_id = %s
     """, (indicator_id,))
@@ -82,12 +82,22 @@ def fetch_last_used(cur, day):
     """, (day,))
     return dict(cur.fetchall())
 
+def fetch_population(cur) -> dict:
+    """Ultima popolazione disponibile per ogni paese."""
+    cur.execute("""
+        SELECT DISTINCT ON (iso3) iso3, value FROM observations
+        WHERE indicator_id = 'population' ORDER BY iso3, year DESC
+    """)
+    return dict(cur.fetchall())
 
-def build_payload(item, fmt, rows, day):
+def build_payload(item, fmt, rows, day, population=None, min_population=0):
     year = formats.reference_year(rows, day.year, item["max_age"])
     if year is None:
         return None
-    payload = formats.BUILDERS[fmt](rows, year)
+    if fmt == "the_gap":
+        payload = formats.the_gap(rows, year, item["unit"], population, min_population)
+    else:
+        payload = formats.BUILDERS[fmt](rows, year)
     if payload is None:
         return None
     payload.update({
@@ -118,6 +128,8 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
                 log.info("%s già pianificato: niente da fare (usa --replace)", day)
                 return 0
             last_used = fetch_last_used(cur, day)
+            population = fetch_population(cur)
+            min_pop = sched.get("gap_min_population", 0)
             used_today = set()
             for slot, (fmt, topic) in zip(sched["slots"], todo):
                 slot_at = dt.datetime.combine(
@@ -130,7 +142,7 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
                                             day, sched["no_repeat_days"])
                     if item is None:
                         break
-                    payload = build_payload(item, fmt, fetch_rows(cur, item["id"]), day)
+                    payload = build_payload(item, fmt, fetch_rows(cur, item["id"]), day, population, min_pop)
                     if payload:
                         break
                     tried.add(item["id"])

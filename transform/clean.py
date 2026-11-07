@@ -9,26 +9,38 @@ import argparse
 import collections
 import logging
 
+import yaml
+
 from common import catalog, config, storage
 from transform import checks
 
 log = logging.getLogger("transform")
+NAMES_FILE = config.ROOT / "catalog" / "country_names.yml"
+
+
+def load_display_names() -> dict:
+    """Nomi comuni da mostrare (South Korea invece di Korea, Rep.)."""
+    with open(NAMES_FILE, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
 
 # --- Parte "pura": nessun database, facile da testare ----------------------
 
-def clean_countries(raw: list[dict]) -> list[dict]:
+def clean_countries(raw: list[dict], display: dict | None = None) -> list[dict]:
     """Tiene solo i paesi veri: la World Bank segna gli aggregati
-    (World, High income, Euro area…) con la regione 'Aggregates'."""
+    (World, High income, Euro area…) con la regione 'Aggregates'.
+    display: nomi da mostrare per iso3; gli altri paesi usano il nome ufficiale."""
     out = []
     for c in raw:
         region = (c.get("region") or {}).get("value", "")
         iso3 = c.get("id", "")
         if region == "Aggregates" or len(iso3) != 3:
             continue
+        name = c.get("name", "").strip()
         out.append({
             "iso3": iso3,
-            "name": c.get("name", "").strip(),
+            "name": name,
+            "display_name": (display or {}).get(iso3, name),
             "region": region.strip() or None,
             "income": ((c.get("incomeLevel") or {}).get("value") or "").strip() or None,
         })
@@ -66,11 +78,12 @@ def load_countries(conn, countries: list[dict]) -> None:
 
     with conn.cursor() as cur:
         execute_values(cur, """
-            INSERT INTO countries (iso3, name, region, income) VALUES %s
+            INSERT INTO countries (iso3, name, region, income, display_name) VALUES %s
             ON CONFLICT (iso3) DO UPDATE SET name = EXCLUDED.name,
                 region = EXCLUDED.region, income = EXCLUDED.income,
-                updated_at = now()
-        """, [(c["iso3"], c["name"], c["region"], c["income"]) for c in countries])
+                display_name = EXCLUDED.display_name, updated_at = now()
+        """, [(c["iso3"], c["name"], c["region"], c["income"], c["display_name"])
+              for c in countries])
 
 
 def load_indicator(conn, item: dict, rows: list[dict], run_date: str) -> None:
@@ -103,7 +116,8 @@ def main():
     a = p.parse_args()
 
     countries = clean_countries(
-        storage.read_json(storage.raw_key("worldbank", "countries", a.run_date)))
+        storage.read_json(storage.raw_key("worldbank", "countries", a.run_date)),
+        load_display_names())
     valid = {c["iso3"] for c in countries}
     items = [catalog.get(a.indicator)] if a.indicator else catalog.load("worldbank")
 
