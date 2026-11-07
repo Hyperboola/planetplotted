@@ -1,0 +1,18 @@
+# Catalogo degli indicatori.
+# topic: economy, people, technology, energy, education
+# additive: true solo se i valori dei paesi si possono sommare
+# max_age: quanti anni al massimo può essere vecchio il dato
+
+indicators:
+  - {id: population, source: worldbank, code: SP.POP.TOTL, name: Population, unit: people, topic: people, max_age: 3, additive: true}
+  - {id: fertility, source: worldbank, code: SP.DYN.TFRT.IN, name: Fertility rate, unit: births per woman, topic: people, max_age: 4}
+  - {id: life_expectancy, source: worldbank, code: SP.DYN.LE00.IN, name: Life expectancy at birth, unit: years, topic: people, max_age: 4}
+  - {id: gdp_total, source: worldbank, code: NY.GDP.MKTP.CD, name: GDP, unit: current US$, topic: economy, max_age: 3, additive: true}
+  - {id: gdp_per_capita, source: worldbank, code: NY.GDP.PCAP.CD, name: GDP per capita, unit: current US$, topic: economy, max_age: 3}
+  - {id: inflation, source: worldbank, code: FP.CPI.TOTL.ZG, name: Inflation, consumer prices, unit: "% per year", topic: economy, max_age: 3}
+  - {id: internet_users, source: worldbank, code: IT.NET.USER.ZS, name: Internet users, unit: "% of population", topic: technology, max_age: 4}
+  - {id: mobile_subscriptions, source: worldbank, code: IT.CEL.SETS.P2, name: Mobile subscriptions, unit: per 100 people, topic: technology, max_age: 4}
+  - {id: electricity_access, source: worldbank, code: EG.ELC.ACCS.ZS, name: Access to electricity, unit: "% of population", topic: energy, max_age: 5}
+  - {id: renewables_share, source: worldbank, code: EG.FEC.RNEW.ZS, name: Renewable energy share, unit: "% of final energy use", topic: energy, max_age: 5}
+  - {id: tertiary_enrollment, source: worldbank, code: SE.TER.ENRR, name: University enrollment, unit: "% gross", topic: education, max_age: 5}
+  - {id: education_spending, source: worldbank, code: SE.XPD.TOTL.GD.ZS, name: Public spending on education, unit: "% of GDP", topic: education, max_age: 5}

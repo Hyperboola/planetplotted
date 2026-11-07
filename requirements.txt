@@ -1,0 +1,8 @@
+requests
+pyyaml
+psycopg2-binary
+boto3
+matplotlib
+pillow
+shapely
+fonttools

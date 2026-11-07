@@ -1,0 +1,17 @@
+# Slot giornalieri (orari UTC). Ogni giorno della settimana deve avere
+# tanti post quanti sono gli slot, nello stesso ordine.
+slots:
+  - {time: "12:00", media: reel}
+  - {time: "17:00", media: carousel}
+
+no_repeat_days: 7   # un indicatore non torna prima di 7 giorni
+
+# [formato, tema] per ogni slot
+week:
+  mon: [[ranked, economy],     [mapped, people]]
+  tue: [[then_vs_now, technology], [the_gap, economy]]
+  wed: [[ranked, people],      [world_in_one_chart, economy]]
+  thu: [[then_vs_now, energy], [mapped, education]]
+  fri: [[ranked, technology],  [the_gap, people]]
+  sat: [[then_vs_now, people], [world_in_one_chart, energy]]
+  sun: [[ranked, education],   [mapped, economy]]

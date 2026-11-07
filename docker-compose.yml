@@ -1,0 +1,43 @@
+# Ambiente locale: Postgres (dati + metadati Airflow) e Airflow.
+# Avvio:  docker compose up -d --build
+# Airflow: http://localhost:8080  (password: vedi README)
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: worldviz
+      POSTGRES_PASSWORD: worldviz
+      POSTGRES_DB: worldviz
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worldviz -d worldviz"]
+      interval: 5s
+      retries: 10
+
+  airflow:
+    build: .
+    command: standalone
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/worldviz/dags
+      PYTHONPATH: /opt/worldviz
+      PG_DSN: postgresql://worldviz:worldviz@postgres:5432/worldviz
+      LOCAL_RAW_DIR: /opt/worldviz/data/raw
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/opt/worldviz
+
+volumes:
+  pgdata:
