@@ -6,9 +6,10 @@ Ogni funzione riceve:
   p: il payload originale
 e restituisce una lista di Slide.
 """
+
 from copywriting.numbers import fmt_value as n_fmt
 from copywriting.numbers import with_unit as n_with_unit
-from render.base import (ACCENT, CAROUSEL, FG, HANDLE, LINE, MARGIN, MUTED, ROOT,
+from render.base import (ACCENT, BG, CAROUSEL, FG, HANDLE, LINE, MARGIN, MUTED, ROOT,
                          Slide)
 
 WIDTH = CAROUSEL[0] - 2 * MARGIN
@@ -128,7 +129,7 @@ def the_gap(t, v, p):
         """Le due barre a confronto: il divario si vede prima di leggerlo."""
         for item, color in ((hi, FG), (lo, ACCENT)):
             s.text(MARGIN, y, n_with_unit(n_fmt(item["value"], p["unit"]), p["unit"]),
-                size=40, weight="bold", color=color)
+                   size=40, weight="bold", color=color)
             bar(s, y + 60, item["value"], color)
             y += 120
 
@@ -170,4 +171,67 @@ def the_gap(t, v, p):
     return [s1, s2, s3, closing(v)]
 
 
-BUILDERS = {"ranked": ranked, "the_gap": the_gap}
+# Scala dei colori della mappa: dal blu-grigio (valori bassi) al corallo (alti).
+# "No data" è appena più chiaro dello sfondo, così non sembra un valore basso.
+MAP_SCALE = ["#435A7E", "#7C8CAB", "#CBB2BA", "#F2A091", "#FF6B5B"]
+NO_DATA = "#1C2A3F"
+
+
+def mapped(t, v, p):
+    from copywriting.numbers import competition_ranks
+    from render import worldmap
+
+    unit = p["unit"]
+    edges = p["bins"]
+    values = {r["iso3"]: r["value"] for r in p["values"]}
+
+    def color(value):
+        return MAP_SCALE[sum(value >= e for e in edges)]
+
+    colors = {iso3: color(val) for iso3, val in values.items()}
+    fmt = lambda x: n_fmt(x, unit)
+    labels = ([f"under {fmt(edges[0])}"] +
+              [f"{fmt(a)} – {fmt(b)}" for a, b in zip(edges, edges[1:])] +
+              [f"{fmt(edges[-1])} and over"])
+
+    def preview(s, y):
+        worldmap.draw(s.ax, MARGIN, y, WIDTH, colors, NO_DATA, BG)
+
+    s1 = cover("Mapped", t, v, preview)
+
+    s2 = Slide()
+    y = s2.text(MARGIN, MARGIN, f"{v['indicator']} · {unit} · {v['year']}", size=30,
+                weight="semibold", color=MUTED, max_width=WIDTH)
+    y = s2.text(MARGIN, y + 24, t["title"], size=56, weight="bold", max_width=WIDTH)
+    y += 60
+    y += worldmap.draw(s2.ax, MARGIN - 40, y, WIDTH + 80, colors, NO_DATA, BG) + 50
+    # Legenda: 5 classi con lo stesso numero di paesi, più "No data"
+    y = s2.text(MARGIN, y, "Each colour holds about the same number of countries",
+                size=28, color=MUTED) + 20
+    col_w = WIDTH / 2
+    for i, (c, label) in enumerate(list(zip(MAP_SCALE, labels)) + [(NO_DATA, "No data")]):
+        lx = MARGIN + (i % 2) * col_w
+        ly = y + (i // 2) * 56
+        s2.rect(lx, ly + 4, 36, 30, c, 6)
+        s2.text(lx + 52, ly, label, size=30, color=FG)
+    s2.footer(source_line(v))
+
+    s3 = Slide()
+    ordered = sorted(p["values"], key=lambda r: r["value"], reverse=True)
+    disp = [fmt(r["value"]) for r in ordered]
+    ranks = competition_ranks(disp)
+    vmax = 100.0 if unit.startswith("%") else max(r["value"] for r in ordered)
+    rows = [{"rank": k, "name": r["name"], "value": d, "raw": r["value"]}
+            for r, k, d in zip(ordered, ranks, disp)]
+    y = s3.text(MARGIN, MARGIN, f"Highest and lowest of {v['n_countries']}", size=30,
+                weight="semibold", color=MUTED)
+    y = s3.text(MARGIN, y + 24, t["closing"], size=46, weight="bold", max_width=WIDTH)
+    y = ranking_rows(s3, rows[:5], y + 30, vmax, {rows[0]["rank"]}, row_h=82)
+    s3.line(MARGIN, y + 10, CAROUSEL[0] - MARGIN, y + 10)
+    ranking_rows(s3, rows[-5:], y + 40, vmax, set(), row_h=82)
+    s3.footer(source_line(v))
+
+    return [s1, s2, s3, closing(v)]
+
+
+BUILDERS = {"ranked": ranked, "the_gap": the_gap, "mapped": mapped}
