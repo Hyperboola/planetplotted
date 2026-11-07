@@ -1,0 +1,22 @@
+# Segreti e configurazione locale
+.env
+
+# Dati generati dalla pipeline (si ricreano rilanciando le tappe)
+data/raw/
+data/renders/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Airflow
+logs/
+standalone_admin_password.txt
+
+# Sistema operativo ed editor
+.DS_Store
+.idea/
+.vscode/
