@@ -1,11 +1,11 @@
-"""COPY – scrive i testi dei post pianificati.
+"""GOLD · COPY – scrive i testi dei post pianificati.
 
 Il copy si salva con i {segnaposto}, non con i numeri: i numeri vengono
 inseriti al momento del render. Così dall'admin si può riscrivere ogni
 frase, ma i dati restano sempre quelli del payload.
 
 Uso:
-    python -m copywriting.generate --date 2026-11-07
+    python -m gold.copywriting.generate --date 2026-11-07
 """
 
 import argparse
@@ -16,11 +16,11 @@ import string
 
 import yaml
 
-from common import config
-from copywriting import values
+from common import config, db
+from gold.copywriting import values
 
-log = logging.getLogger("copy")
-TEMPLATES_FILE = config.ROOT / "copywriting" / "templates.yml"
+log = logging.getLogger("gold.copy")
+TEMPLATES_FILE = config.ROOT / "gold" / "copywriting" / "templates.yml"
 HASHTAGS = {
     "economy": "#economy", "people": "#demographics", "technology": "#technology",
     "energy": "#energy", "education": "#education",
@@ -68,24 +68,22 @@ def make_copy(templates, fmt, payload, post_id, topic) -> dict:
 
 
 def generate_day(day: dt.date) -> int:
-    import psycopg2
-
     with open(TEMPLATES_FILE, encoding="utf-8") as f:
         templates = yaml.safe_load(f)
-    conn = psycopg2.connect(config.PG_DSN)
+    conn = db.connect()
     done = 0
     try:
         with conn, conn.cursor() as cur:
             cur.execute("""
                 SELECT p.id, p.format, p.payload, i.topic
-                FROM post_queue p JOIN indicators i ON i.id = p.indicator_id
+                FROM gold.post_queue p JOIN silver.indicators i ON i.id = p.indicator_id
                 WHERE p.slot_at::date = %s AND p.status = 'planned' AND NOT p.copy_edited
                 ORDER BY p.slot_at
             """, (day,))
             for post_id, fmt, payload, topic in cur.fetchall():
                 copy = make_copy(templates, fmt, payload, post_id, topic)
                 cur.execute("""
-                    UPDATE post_queue SET copy = %s, status = 'copy_ready', updated_at = now()
+                    UPDATE gold.post_queue SET copy = %s, status = 'copy_ready', updated_at = now()
                     WHERE id = %s
                 """, (json.dumps(copy, ensure_ascii=False), post_id))
                 done += 1

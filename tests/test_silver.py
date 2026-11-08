@@ -1,22 +1,24 @@
-"""Test della pulizia: si lanciano con  pytest  dalla cartella del progetto."""
+"""Test dello strato silver: pulizia e controlli di qualità."""
 
 import pytest
 
-from transform import checks
-from transform.clean import clean_countries, clean_worldbank_rows
+from silver import checks
+from silver.clean import clean_countries, clean_worldbank_rows
 
 RAW_COUNTRIES = [
     {"id": "ITA", "name": "Italy", "region": {"value": "Europe & Central Asia"},
      "incomeLevel": {"value": "High income"}},
-    {"id": "WLD", "name": "World", "region": {"value": "Aggregates"},
-     "incomeLevel": {"value": "Aggregates"}},
-    {"id": "EUU", "name": "European Union", "region": {"value": "Aggregates"}},
+    {"id": "KOR", "name": "Korea, Rep.", "region": {"value": "East Asia & Pacific"}},
+    {"id": "WLD", "name": "World", "region": {"value": "Aggregates"}},
 ]
 
 
-def test_countries_drop_aggregates():
-    out = clean_countries(RAW_COUNTRIES)
-    assert [c["iso3"] for c in out] == ["ITA"]
+def test_countries_drop_aggregates_and_use_display_names():
+    out = clean_countries(RAW_COUNTRIES, {"KOR": "South Korea"})
+    assert [c["iso3"] for c in out] == ["ITA", "KOR"]
+    assert out[1]["name"] == "Korea, Rep."
+    assert out[1]["display_name"] == "South Korea"
+    assert out[0]["display_name"] == "Italy"
 
 
 def test_rows_are_cleaned_and_drops_counted():
@@ -32,9 +34,8 @@ def test_rows_are_cleaned_and_drops_counted():
 
 
 def test_dataset_with_too_few_countries_fails():
-    rows = [{"iso3": "ITA", "year": 2023, "value": 1.0}]
     with pytest.raises(checks.DataQualityError):
-        checks.check_dataset(rows, "population")
+        checks.check_dataset([{"iso3": "ITA", "year": 2023, "value": 1.0}], "population")
 
 
 def test_duplicates_fail():

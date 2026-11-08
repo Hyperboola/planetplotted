@@ -14,8 +14,8 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.textpath import TextPath
 
 from brand import theme
+from common.config import ROOT
 
-ROOT = Path(__file__).resolve().parents[1]
 FONT_DIR = ROOT / "brand" / "fonts"
 FONTS = {w: FontProperties(fname=str(FONT_DIR / f"Manrope-{s}.ttf"))
          for w, s in [("regular", "Regular"), ("semibold", "SemiBold"), ("bold", "ExtraBold")]}
@@ -23,6 +23,7 @@ FONTS = {w: FontProperties(fname=str(FONT_DIR / f"Manrope-{s}.ttf"))
 BG, FG, ACCENT = theme.MIDNIGHT, theme.MIST, theme.CORAL
 MUTED, LINE = theme.MUTED_DARK, theme.RING
 HANDLE = theme.HANDLE
+BRAND = theme.BRAND_NAME
 CAROUSEL = (1080, 1350)
 REEL = (1080, 1920)
 MARGIN = 88
@@ -96,7 +97,7 @@ class Slide:
         """Fonte a sinistra e nome della pagina a destra, in fondo."""
         y = self.h - MARGIN - 30
         self.text(MARGIN, y, source, size=26, color=MUTED)
-        self.text(self.w - MARGIN, y, "World Visualization", size=26,
+        self.text(self.w - MARGIN, y, BRAND, size=26,
                   weight="bold", ha="right")
 
     def save(self, path: Path):

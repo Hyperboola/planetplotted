@@ -7,10 +7,10 @@ Ogni funzione riceve:
 e restituisce una lista di Slide.
 """
 
-from copywriting.numbers import fmt_value as n_fmt
-from copywriting.numbers import with_unit as n_with_unit
-from render.base import (ACCENT, BG, CAROUSEL, FG, HANDLE, LINE, MARGIN, MUTED, ROOT,
-                         Slide)
+from gold.copywriting.numbers import fmt_value as n_fmt
+from gold.copywriting.numbers import with_unit as n_with_unit
+from serving.render.base import (ACCENT, BG, BRAND, CAROUSEL, FG, HANDLE, LINE, MARGIN, MUTED,
+                                 ROOT, Slide)
 
 WIDTH = CAROUSEL[0] - 2 * MARGIN
 LOGO = ROOT / "brand" / "assets" / "mark_dark-bg.png"
@@ -43,7 +43,7 @@ def cover(tag: str, t: dict, v: dict, preview=None) -> Slide:
     if preview:
         preview(s, y + 70)
     s.image(LOGO_SMALL, MARGIN, CAROUSEL[1] - MARGIN - 64, 64, 64)
-    s.text(MARGIN + 82, CAROUSEL[1] - MARGIN - 48, "World Visualization", size=30, weight="bold")
+    s.text(MARGIN + 82, CAROUSEL[1] - MARGIN - 48, BRAND, size=30, weight="bold")
     s.text(CAROUSEL[0] - MARGIN, CAROUSEL[1] - MARGIN - 50, "Swipe →", size=34,
            weight="semibold", color=ACCENT, ha="right")
     return s
@@ -187,8 +187,8 @@ NO_DATA = "#1C2A3F"
 
 
 def mapped(t, v, p):
-    from copywriting.numbers import competition_ranks
-    from render import worldmap
+    from gold.copywriting.numbers import competition_ranks
+    from serving.render import worldmap
 
     unit = p["unit"]
     edges = p["bins"]

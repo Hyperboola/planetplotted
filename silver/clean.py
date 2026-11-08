@@ -1,8 +1,8 @@
-"""TRANSFORM – legge il raw, pulisce i dati e li carica nel database.
+"""SILVER · legge il bronze, pulisce i dati e li carica nello schema silver.
 
 Uso:
-    python -m transform.clean --run-date 2026-11-06
-    python -m transform.clean --run-date 2026-11-06 --indicator population
+    python -m silver.clean --run-date 2026-11-06
+    python -m silver.clean --run-date 2026-11-06 --indicator population
 """
 
 import argparse
@@ -11,10 +11,10 @@ import logging
 
 import yaml
 
-from common import catalog, config, storage
-from transform import checks
+from common import catalog, config, db, storage
+from silver import checks
 
-log = logging.getLogger("transform")
+log = logging.getLogger("silver")
 NAMES_FILE = config.ROOT / "catalog" / "country_names.yml"
 
 
@@ -67,18 +67,13 @@ def clean_worldbank_rows(raw: list[dict], valid_iso3: set[str]) -> tuple[list[di
 
 # --- Caricamento nel database -------------------------------------------------
 
-def _connect():
-    import psycopg2
-
-    return psycopg2.connect(config.PG_DSN)
-
 
 def load_countries(conn, countries: list[dict]) -> None:
     from psycopg2.extras import execute_values
 
     with conn.cursor() as cur:
         execute_values(cur, """
-            INSERT INTO countries (iso3, name, region, income, display_name) VALUES %s
+            INSERT INTO silver.countries (iso3, name, region, income, display_name) VALUES %s
             ON CONFLICT (iso3) DO UPDATE SET name = EXCLUDED.name,
                 region = EXCLUDED.region, income = EXCLUDED.income,
                 display_name = EXCLUDED.display_name, updated_at = now()
@@ -91,7 +86,7 @@ def load_indicator(conn, item: dict, rows: list[dict], run_date: str) -> None:
 
     with conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO indicators (id, source, code, name, unit, topic, max_age)
+            INSERT INTO silver.indicators (id, source, code, name, unit, topic, max_age)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO UPDATE SET source = EXCLUDED.source,
                 code = EXCLUDED.code, name = EXCLUDED.name, unit = EXCLUDED.unit,
@@ -99,7 +94,7 @@ def load_indicator(conn, item: dict, rows: list[dict], run_date: str) -> None:
         """, (item["id"], item["source"], item["code"], item["name"],
               item["unit"], item["topic"], item["max_age"]))
         execute_values(cur, """
-            INSERT INTO observations (indicator_id, iso3, year, value, source, run_date)
+            INSERT INTO silver.observations (indicator_id, iso3, year, value, source, run_date)
             VALUES %s
             ON CONFLICT (indicator_id, iso3, year) DO UPDATE SET
                 value = EXCLUDED.value, source = EXCLUDED.source,
@@ -116,17 +111,17 @@ def main():
     a = p.parse_args()
 
     countries = clean_countries(
-        storage.read_json(storage.raw_key("worldbank", "countries", a.run_date)),
+        storage.read_json(storage.bronze_key("worldbank", "countries", a.run_date)),
         load_display_names())
     valid = {c["iso3"] for c in countries}
     items = [catalog.get(a.indicator)] if a.indicator else catalog.load("worldbank")
 
-    conn = _connect()
+    conn = db.connect()
     try:
         with conn:  # una transazione: o si carica tutto o niente
             load_countries(conn, countries)
             for item in items:
-                raw = storage.read_json(storage.raw_key("worldbank", item["id"], a.run_date))
+                raw = storage.read_json(storage.bronze_key("worldbank", item["id"], a.run_date))
                 rows, dropped = clean_worldbank_rows(raw, valid)
                 checks.check_dataset(rows, item["id"])
                 load_indicator(conn, item, rows, a.run_date)

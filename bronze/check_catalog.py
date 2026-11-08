@@ -4,7 +4,7 @@ Per ogni indicatore verifica che il codice esista e quanto sono recenti
 e completi i dati. Non scrive nulla: stampa solo un resoconto.
 
 Uso:
-    python -m sources.check_catalog
+    python -m bronze.check_catalog
 """
 
 import datetime as dt

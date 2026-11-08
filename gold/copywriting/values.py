@@ -4,7 +4,7 @@ Ogni valore è già formattato come stringa: i template possono usare
 solo questi segnaposto, quindi i numeri non si possono cambiare a mano.
 """
 
-from copywriting import numbers as n
+from gold.copywriting import numbers as n
 
 
 def _lc(name: str) -> str:

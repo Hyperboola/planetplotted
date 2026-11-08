@@ -6,15 +6,15 @@ di Natural Earth contiene invece codici World Bank vecchi (ZAR per il
 Congo, ROM per la Romania…), quindi non va usato.
 
 Uso (una sola volta, o dopo aver modificato questo file):
-    python -m render.setup_map
+    python -m serving.render.setup_map
 """
 
 import json
-from pathlib import Path
 
 import requests
 
-ROOT = Path(__file__).resolve().parents[1]
+from common.config import ROOT
+
 OUT = ROOT / "brand" / "maps" / "countries_50m.geojson"
 URL = ("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
        "master/geojson/ne_50m_admin_0_countries.geojson")

@@ -1,8 +1,9 @@
-"""DAG Airflow: estrae i dati World Bank e li carica puliti nel database.
+"""DAG Airflow: dalla World Bank ai post pronti, strato per strato.
 
-Ogni tappa lancia uno script indipendente: lo stesso comando funziona
+bronze (extract) -> silver (pulizia) -> gold (plan e copy) -> serving (render)
+
+Ogni task lancia uno script indipendente: lo stesso comando funziona
 anche a mano dal terminale, senza Airflow.
-Le tappe plan e render si aggiungeranno qui quando saranno pronte.
 """
 
 import datetime as dt
@@ -11,10 +12,12 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 
 PROJECT = "cd /opt/worldviz && python -m"
+RUN_DATE = "{{ ds }}"                         # giorno dell'estrazione
+POST_DATE = "{{ data_interval_end | ds }}"    # giorno dei post da preparare
 
 with DAG(
-    dag_id="worldviz_worldbank",
-    description="World Bank: extract -> transform",
+    dag_id="worldviz_daily",
+    description="World Bank -> bronze -> silver -> gold -> serving",
     schedule="0 4 * * *",          # ogni giorno alle 4:00 UTC
     start_date=dt.datetime(2026, 11, 1),
     catchup=False,
@@ -23,29 +26,34 @@ with DAG(
     tags=["worldviz", "etl"],
 ) as dag:
 
-    extract_countries = BashOperator(
-        task_id="extract_countries",
-        bash_command=f"{PROJECT} sources.worldbank --countries --run-date {{{{ ds }}}}",
+    bronze_countries = BashOperator(
+        task_id="bronze_countries",
+        bash_command=f"{PROJECT} bronze.worldbank --countries --run-date {RUN_DATE}",
     )
 
-    extract_indicators = BashOperator(
-        task_id="extract_indicators",
-        bash_command=f"{PROJECT} sources.worldbank --run-date {{{{ ds }}}}",
+    bronze_indicators = BashOperator(
+        task_id="bronze_indicators",
+        bash_command=f"{PROJECT} bronze.worldbank --run-date {RUN_DATE}",
     )
 
-    transform = BashOperator(
-        task_id="transform_load",
-        bash_command=f"{PROJECT} transform.clean --run-date {{{{ ds }}}}",
+    silver = BashOperator(
+        task_id="silver_clean",
+        bash_command=f"{PROJECT} silver.clean --run-date {RUN_DATE}",
     )
 
-    plan = BashOperator(
-        task_id="plan_day",
-        bash_command=f"{PROJECT} plan.schedule --date {{{{ data_interval_end | ds }}}}",
+    gold_plan = BashOperator(
+        task_id="gold_plan",
+        bash_command=f"{PROJECT} gold.plan.schedule --date {POST_DATE}",
     )
 
-    write_copy = BashOperator(
-        task_id="write_copy",
-        bash_command=f"{PROJECT} copywriting.generate --date {{{{ data_interval_end | ds }}}}",
+    gold_copy = BashOperator(
+        task_id="gold_copy",
+        bash_command=f"{PROJECT} gold.copywriting.generate --date {POST_DATE}",
     )
 
-    [extract_countries, extract_indicators] >> transform >> plan >> write_copy
+    serving_render = BashOperator(
+        task_id="serving_render",
+        bash_command=f"{PROJECT} serving.render.post --date {POST_DATE}",
+    )
+
+    [bronze_countries, bronze_indicators] >> silver >> gold_plan >> gold_copy >> serving_render

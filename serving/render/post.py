@@ -1,12 +1,12 @@
-"""RENDER – crea le immagini (e più avanti il video) di un post.
+"""SERVING · RENDER – crea le immagini (e più avanti il video) di un post.
 
 È la "stampante": riceve l'id di un post, o un giorno, e produce i file.
 La stessa funzione la lanceranno Airflow ogni mattina e l'admin quando
 modifichi un testo.
 
 Uso:
-    python -m render.post --post-id 7
-    python -m render.post --date 2026-11-07
+    python -m serving.render.post --post-id 7
+    python -m serving.render.post --date 2026-11-07
 """
 
 import argparse
@@ -15,13 +15,13 @@ import json
 import logging
 from pathlib import Path
 
-from common import config
-from copywriting import values
-from copywriting.generate import resolve
-from render import carousel
+from common import config, db
+from gold.copywriting import values
+from gold.copywriting.generate import resolve
+from serving.render import carousel
 
-log = logging.getLogger("render")
-OUT_DIR = config.ROOT / "data" / "renders"
+log = logging.getLogger("serving.render")
+OUT_DIR = config.RENDERS_DIR
 
 
 def render_carousel(post: dict) -> list[str]:
@@ -36,14 +36,10 @@ def render_carousel(post: dict) -> list[str]:
     paths = []
     for i, slide in enumerate(slides, 1):
         path = slide.save(folder / f"slide_{i:02d}.png")
-        paths.append(str(Path(path).relative_to(config.ROOT)))
+        # Percorso relativo alla cartella dei render: vale uguale in locale e su S3
+        paths.append(str(Path(path).relative_to(OUT_DIR)))
     return paths
 
-
-def _connect():
-    import psycopg2
-
-    return psycopg2.connect(config.PG_DSN)
 
 
 def fetch_posts(cur, post_id=None, day=None) -> list[dict]:
@@ -51,14 +47,14 @@ def fetch_posts(cur, post_id=None, day=None) -> list[dict]:
         "p.slot_at::date = %s AND p.status IN ('copy_ready', 'rendered')", day)
     cur.execute(f"""
         SELECT p.id, p.slot_at, p.format, p.payload, p.copy
-        FROM post_queue p WHERE {where} AND p.copy IS NOT NULL ORDER BY p.slot_at
+        FROM gold.post_queue p WHERE {where} AND p.copy IS NOT NULL ORDER BY p.slot_at
     """, (arg,))
     cols = [c.name for c in cur.description]
     return [dict(zip(cols, row)) for row in cur.fetchall()]
 
 
 def run(post_id=None, day=None) -> int:
-    conn = _connect()
+    conn = db.connect()
     done = 0
     try:
         with conn, conn.cursor() as cur:
@@ -72,13 +68,13 @@ def run(post_id=None, day=None) -> int:
                     log.warning("post %s: %s", post["id"], exc)
                     continue
                 cur.execute("""
-                    UPDATE post_queue SET carousel_files = %s, rendered_at = now(),
+                    UPDATE gold.post_queue SET carousel_files = %s, rendered_at = now(),
                         updated_at = now()
                     WHERE id = %s
                 """, (json.dumps(files), post["id"]))
                 done += 1
                 log.info("post %s (%s): %s slide in %s", post["id"], post["format"],
-                         len(files), Path(files[0]).parent)
+                         len(files), OUT_DIR / Path(files[0]).parent)
     finally:
         conn.close()
     return done

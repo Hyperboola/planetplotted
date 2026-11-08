@@ -2,8 +2,11 @@
 .env
 
 # Dati generati dalla pipeline (si ricreano rilanciando le tappe)
-data/raw/
-data/renders/
+data/bronze/*
+data/renders/*
+!data/bronze/.gitkeep
+!data/renders/.gitkeep
+data/*.zip
 
 # Python
 __pycache__/

@@ -1,6 +1,6 @@
 # Nomi da mostrare nei post e sul sito: uno per ogni paese, per codice iso3.
-# Il commento a destra è il nome ufficiale World Bank (resta in countries.name).
-# Si modifica solo il nome prima del commento. Poi: python -m transform.clean
+# Il commento a destra è il nome ufficiale World Bank (resta in silver.countries.name).
+# Si modifica solo il nome prima del commento. Poi: python -m silver.clean
 #
 # Nomi politicamente contesi (es. "West Bank and Gaza"): si tiene quello
 # della fonte, che è neutro.

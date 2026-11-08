@@ -1,4 +1,4 @@
-"""Controlli di qualità: se un controllo fallisce, la pipeline si ferma
+"""SILVER · controlli di qualità: se un controllo fallisce, la pipeline si ferma
 invece di caricare dati sbagliati (regola: mai inventare nulla)."""
 
 import datetime as dt

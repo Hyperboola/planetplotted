@@ -1,7 +1,7 @@
 """Configurazione letta dalle variabili d'ambiente.
 
 In locale con Docker i valori arrivano dal file .env.
-Senza S3_ENDPOINT il raw viene salvato su disco in data/raw.
+Senza S3_ENDPOINT lo strato bronze viene salvato su disco in data/bronze.
 """
 
 import os
@@ -9,14 +9,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Storage del raw: S3/MinIO se configurato, altrimenti cartella locale
-S3_ENDPOINT = os.getenv("S3_ENDPOINT")          # es. http://minio:9000
-S3_BUCKET = os.getenv("S3_BUCKET", "worldviz-raw")
+# Bronze: S3 (o compatibile) se configurato, altrimenti cartella locale
+S3_ENDPOINT = os.getenv("S3_ENDPOINT")          # es. https://<account>.r2.cloudflarestorage.com
+S3_BUCKET = os.getenv("S3_BUCKET", "worldviz-bronze")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
-LOCAL_RAW_DIR = Path(os.getenv("LOCAL_RAW_DIR", ROOT / "data" / "raw"))
+LOCAL_BRONZE_DIR = Path(os.getenv("LOCAL_BRONZE_DIR", ROOT / "data" / "bronze"))
 
-# Database dei dati puliti
+# Serving: immagini e video generati
+RENDERS_DIR = Path(os.getenv("RENDERS_DIR", ROOT / "data" / "renders"))
+
+# Database: schemi silver e gold
 PG_DSN = os.getenv(
     "PG_DSN", "postgresql://worldviz:worldviz@localhost:5432/worldviz"
 )

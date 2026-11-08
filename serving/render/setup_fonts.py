@@ -5,17 +5,17 @@ che matplotlib non gestisce bene. Questo script lo scarica una volta
 e ne ricava tre file statici: Regular, SemiBold ed ExtraBold.
 
 Uso (una sola volta):
-    python -m render.setup_fonts
+    python -m serving.render.setup_fonts
 """
 
 import io
-from pathlib import Path
 
 import requests
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
-ROOT = Path(__file__).resolve().parents[1]
+from common.config import ROOT
+
 FONT_DIR = ROOT / "brand" / "fonts"
 BASE = "https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/"
 VARIABLE_URL = BASE + "Manrope%5Bwght%5D.ttf"

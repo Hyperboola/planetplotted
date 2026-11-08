@@ -1,8 +1,8 @@
-"""PLAN – decide cosa pubblicare in un giorno e lo scrive in post_queue.
+"""GOLD · PLAN – decide cosa pubblicare in un giorno e lo scrive in gold.post_queue.
 
 Uso:
-    python -m plan.schedule --date 2026-11-07
-    python -m plan.schedule --date 2026-11-07 --replace   # rifà i post ancora 'planned'
+    python -m gold.plan.schedule --date 2026-11-07
+    python -m gold.plan.schedule --date 2026-11-07 --replace   # rifà i post ancora 'planned'
 """
 
 import argparse
@@ -12,10 +12,10 @@ import logging
 
 import yaml
 
-from common import catalog, config
-from plan import formats
+from common import catalog, config, db
+from gold.plan import formats
 
-log = logging.getLogger("plan")
+log = logging.getLogger("gold.plan")
 SCHEDULE_FILE = config.ROOT / "catalog" / "schedule.yml"
 DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -62,16 +62,11 @@ def choose_indicator(items, fmt, topic, last_used, exclude, day, no_repeat_days)
 
 # --- Database -------------------------------------------------------------------
 
-def _connect():
-    import psycopg2
-
-    return psycopg2.connect(config.PG_DSN)
-
 
 def fetch_rows(cur, indicator_id):
     cur.execute("""
         SELECT o.iso3, COALESCE(c.display_name, c.name), o.year, o.value
-        FROM observations o JOIN countries c USING (iso3)
+        FROM silver.observations o JOIN silver.countries c USING (iso3)
         WHERE o.indicator_id = %s
     """, (indicator_id,))
     return [{"iso3": a, "name": b, "year": y, "value": v} for a, b, y, v in cur.fetchall()]
@@ -79,7 +74,7 @@ def fetch_rows(cur, indicator_id):
 
 def fetch_last_used(cur, day):
     cur.execute("""
-        SELECT indicator_id, max(slot_at)::date FROM post_queue
+        SELECT indicator_id, max(slot_at)::date FROM gold.post_queue
         WHERE slot_at::date < %s GROUP BY indicator_id
     """, (day,))
     return dict(cur.fetchall())
@@ -88,7 +83,7 @@ def fetch_last_used(cur, day):
 def fetch_population(cur) -> dict:
     """Ultima popolazione disponibile per ogni paese."""
     cur.execute("""
-        SELECT DISTINCT ON (iso3) iso3, value FROM observations
+        SELECT DISTINCT ON (iso3) iso3, value FROM silver.observations
         WHERE indicator_id = 'population' ORDER BY iso3, year DESC
     """)
     return dict(cur.fetchall())
@@ -120,19 +115,19 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
     sched = load_schedule()
     items = catalog.load()
     todo = sched["week"][DAYS[day.weekday()]]
-    conn = _connect()
+    conn = db.connect()
     planned = 0
     try:
         with conn, conn.cursor() as cur:
             if replace:
                 # Rifà solo i post non ancora renderizzati e mai modificati a mano
                 cur.execute("""
-                    DELETE FROM post_queue
+                    DELETE FROM gold.post_queue
                     WHERE slot_at::date = %s
                       AND status IN ('planned', 'copy_ready')
                       AND NOT copy_edited
                 """, (day,))
-            cur.execute("SELECT count(*) FROM post_queue WHERE slot_at::date = %s", (day,))
+            cur.execute("SELECT count(*) FROM gold.post_queue WHERE slot_at::date = %s", (day,))
             if cur.fetchone()[0]:
                 log.info("%s già pianificato: niente da fare (usa --replace)", day)
                 return 0
@@ -161,7 +156,7 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
                     continue
                 payload["media"] = slot["media"]
                 cur.execute("""
-                    INSERT INTO post_queue (slot_at, format, indicator_id, payload, media)
+                    INSERT INTO gold.post_queue (slot_at, format, indicator_id, payload, media)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (slot_at, fmt, item["id"], json.dumps(payload), slot["media"]))
                 used_today.add(item["id"])

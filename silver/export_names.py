@@ -5,16 +5,16 @@ altrimenti il nome ufficiale World Bank) e, come commento, il nome
 ufficiale. Poi il file si modifica a mano: è l'unico posto dei nomi.
 
 Uso (dopo un transform):
-    python -m transform.export_names
+    python -m silver.export_names
 """
 
-from common import config
-from transform.clean import NAMES_FILE, load_display_names
+from common import config, db
+from silver.clean import NAMES_FILE, load_display_names
 
 HEADER = """\
 # Nomi da mostrare nei post e sul sito: uno per ogni paese, per codice iso3.
-# Il commento a destra è il nome ufficiale World Bank (resta in countries.name).
-# Si modifica solo il nome prima del commento. Poi: python -m transform.clean
+# Il commento a destra è il nome ufficiale World Bank (resta in silver.countries.name).
+# Si modifica solo il nome prima del commento. Poi: python -m silver.clean
 #
 # Nomi politicamente contesi (es. "West Bank and Gaza"): si tiene quello
 # della fonte, che è neutro.
@@ -28,13 +28,11 @@ def yaml_value(name: str) -> str:
 
 
 def main():
-    import psycopg2
-
     overrides = load_display_names()
-    conn = psycopg2.connect(config.PG_DSN)
+    conn = db.connect()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT iso3, name FROM countries ORDER BY iso3")
+            cur.execute("SELECT iso3, name FROM silver.countries ORDER BY iso3")
             rows = cur.fetchall()
     finally:
         conn.close()

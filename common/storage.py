@@ -1,4 +1,4 @@
-"""Salvataggio e lettura dei file raw.
+"""Bronze: salvataggio e lettura dei file scaricati, così come arrivano.
 
 Lo stesso codice funziona con MinIO in locale, con S3 nel cloud
 o con una semplice cartella su disco.
@@ -21,7 +21,7 @@ def _s3():
     )
 
 
-def raw_key(source: str, dataset: str, run_date: str) -> str:
+def bronze_key(source: str, dataset: str, run_date: str) -> str:
     """Percorso standard: <fonte>/<dataset>/run_date=<data>/data.json"""
     return f"{source}/{dataset}/run_date={run_date}/data.json"
 
@@ -36,7 +36,7 @@ def write_json(key: str, payload) -> str:
             s3.create_bucket(Bucket=config.S3_BUCKET)
         s3.put_object(Bucket=config.S3_BUCKET, Key=key, Body=body)
         return f"s3://{config.S3_BUCKET}/{key}"
-    path = Path(config.LOCAL_RAW_DIR) / key
+    path = Path(config.LOCAL_BRONZE_DIR) / key
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(body)
     return str(path)
@@ -46,4 +46,4 @@ def read_json(key: str):
     if config.S3_ENDPOINT:
         obj = _s3().get_object(Bucket=config.S3_BUCKET, Key=key)
         return json.loads(obj["Body"].read())
-    return json.loads((Path(config.LOCAL_RAW_DIR) / key).read_text("utf-8"))
+    return json.loads((Path(config.LOCAL_BRONZE_DIR) / key).read_text("utf-8"))

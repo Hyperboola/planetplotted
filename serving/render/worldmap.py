@@ -12,7 +12,7 @@ from functools import lru_cache
 import numpy as np
 from matplotlib.collections import PolyCollection
 
-from render.base import ROOT
+from serving.render.base import ROOT
 
 MAP_FILE = ROOT / "brand" / "maps" / "countries_50m.geojson"
 A1, A2, A3, A4 = 1.340264, -0.081106, 0.000893, 0.003796

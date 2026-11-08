@@ -1,9 +1,9 @@
-"""EXTRACT – World Bank Open Data.
+"""BRONZE · World Bank Open Data.
 
-Scarica i dati così come sono e li salva nel raw, senza modificarli.
+Scarica i dati così come sono e li salva nello strato bronze, senza modificarli.
 Uso:
-    python -m sources.worldbank --run-date 2026-11-06
-    python -m sources.worldbank --run-date 2026-11-06 --indicator population
+    python -m bronze.worldbank --run-date 2026-11-06
+    python -m bronze.worldbank --run-date 2026-11-06 --indicator population
 """
 
 import argparse
@@ -47,7 +47,7 @@ def _get_all_pages(url: str, params: dict) -> list:
 def extract_countries(run_date: str) -> str:
     """Anagrafica paesi: serve a distinguere i paesi dagli aggregati."""
     rows = _get_all_pages(f"{API}/country", {"format": "json", "per_page": 400})
-    return storage.write_json(storage.raw_key(SOURCE, "countries", run_date), rows)
+    return storage.write_json(storage.bronze_key(SOURCE, "countries", run_date), rows)
 
 
 def extract_indicator(item: dict, run_date: str) -> str:
@@ -59,7 +59,7 @@ def extract_indicator(item: dict, run_date: str) -> str:
             "date": f"{config.YEAR_FROM}:{config.YEAR_TO}",
         },
     )
-    key = storage.raw_key(SOURCE, item["id"], run_date)
+    key = storage.bronze_key(SOURCE, item["id"], run_date)
     return storage.write_json(key, rows)
 
 

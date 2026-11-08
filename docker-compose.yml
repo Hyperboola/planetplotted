@@ -33,7 +33,8 @@ services:
       AIRFLOW__CORE__DAGS_FOLDER: /opt/worldviz/dags
       PYTHONPATH: /opt/worldviz
       PG_DSN: postgresql://worldviz:worldviz@postgres:5432/worldviz
-      LOCAL_RAW_DIR: /opt/worldviz/data/raw
+      LOCAL_BRONZE_DIR: /opt/worldviz/data/bronze
+      RENDERS_DIR: /opt/worldviz/data/renders
     ports:
       - "8080:8080"
     volumes:
