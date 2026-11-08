@@ -8,7 +8,7 @@ slide e didascalia mostrano esattamente la stessa cifra.
 def _big(v: float) -> str:
     a = abs(v)
     if a >= 1e12:
-        return f"{v / 1e12:.1f} trillion"
+        return f"{v / 1e12:.2f} trillion"
     if a >= 1e9:
         return f"{v / 1e9:.2f} billion"
     if a >= 1e6:

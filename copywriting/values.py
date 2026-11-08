@@ -91,9 +91,28 @@ def build(fmt: str, p: dict) -> dict:
         v["scope_note"] = ", ".join(notes) or f"All {p['n_countries']} countries and territories with data"
 
     elif fmt == "mapped":
-        h = p["highlight"]
-        v.update({"top1_name": h[0]["name"], "top1_value": fu(h[0]["value"]),
-                  "top3_names": n.join_names([x["name"] for x in h])})
+        # La mappa usa l'ultimo dato di ogni paese: l'anno diventa una finestra
+        if p.get("year_from") and p["year_from"] != p["year"]:
+            v["year"] = f"{p['year_from']}–{p['year']}"
+        # Le liste usano solo i paesi sopra la soglia di popolazione
+        listed = [r for r in p["values"] if r.get("in_list", True)]
+        v["n_list"] = str(len(listed))
+        v["list_note"] = (f"countries and territories with {n.fmt_count(p['list_min_population'])}+ people"
+                          if p.get("list_min_population") else "countries and territories")
+        # Stesso ordine della slide: valore decrescente, poi nome (pari merito stabili)
+        ordered = sorted(listed, key=lambda r: (-r["value"], r["name"]))
+        disp = [f(r["value"]) for r in ordered]
+        ranks = n.competition_ranks(disp)
+        rank_num = [int(k.lstrip("=")) for k in ranks]
+        firsts = [r["name"] for r, k in zip(ordered, rank_num) if k == 1]
+        leaders = [r["name"] for r, k in zip(ordered, rank_num) if k <= 3]
+        v.update({
+            "top1_name": firsts[0] if len(firsts) == 1 else f"{n.join_names(firsts)} (tied)",
+            "top1_value": n.with_unit(disp[0], unit),
+            # Se più di 3 paesi sono a pari merito in cima, li nomina tutti
+            "top3_names": n.join_names(leaders) + (
+                f" (tied at {disp[0]})" if len(leaders) > 3 else ""),
+        })
 
     elif fmt == "then_vs_now":
         r, d = p["risers"][0], p["fallers"][0]

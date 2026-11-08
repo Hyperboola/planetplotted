@@ -51,17 +51,37 @@ def ranked(rows, year, top=10, bottom=5):
     }
 
 
-def mapped(rows, year, bins=5):
-    data = sorted(_year_rows(rows, year), key=lambda r: r["value"])
+def mapped(rows, current_year, max_age, population=None, min_population=0,
+           bins=5, min_countries=120):
+    """Mappa con l'ultimo dato disponibile per ogni paese, entro max_age anni.
+
+    Non tutti i paesi pubblicano ogni anno: con un solo anno la mappa perde
+    proprio i paesi grandi. Qui ogni paese ha il suo dato più recente, e la
+    slide dichiara la finestra di anni usata.
+    Le liste "highest e lowest" usano solo i paesi con almeno min_population
+    abitanti: sulla mappa i microstati restano, nelle liste no.
+    """
+    oldest = current_year - max_age
+    latest = {}
+    for r in rows:
+        if r["year"] >= oldest and (r["iso3"] not in latest or r["year"] > latest[r["iso3"]]["year"]):
+            latest[r["iso3"]] = r
+    data = sorted(latest.values(), key=lambda r: r["value"])
     n = len(data)
+    if n < min_countries:
+        return None
     # Classi a quantili: ogni classe ha circa lo stesso numero di paesi
     edges = [data[min(n - 1, (n * i) // bins)]["value"] for i in range(1, bins)]
+    in_list = lambda r: population is None or population.get(r["iso3"], 0) >= min_population
+    values = [{**_item(r), "year": r["year"], "in_list": in_list(r)} for r in data]
     return {
-        "year": year,
+        "year": max(r["year"] for r in data),
+        "year_from": min(r["year"] for r in data),
         "n_countries": n,
         "bins": edges,
-        "values": [_item(r) for r in data],
-        "highlight": [_item(r) for r in data[::-1][:3]],
+        "values": values,
+        "list_min_population": min_population,
+        "n_list": sum(v["in_list"] for v in values),
     }
 
 
@@ -148,7 +168,6 @@ def the_gap(rows, year, unit="", population=None, min_population=0):
 
 BUILDERS = {
     "ranked": ranked,
-    "mapped": mapped,
     "then_vs_now": then_vs_now,
     "world_in_one_chart": world_in_one_chart,
     "the_gap": the_gap,

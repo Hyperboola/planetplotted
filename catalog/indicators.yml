@@ -45,9 +45,9 @@ indicators:
   - {id: smoking, source: worldbank, code: SH.PRV.SMOK, name: Smoking prevalence, unit: "% of adults", topic: health, max_age: 5}
 
   # --- Education -----------------------------------------------------------
-  - {id: tertiary_enrollment, source: worldbank, code: SE.TER.ENRR, name: University enrollment, unit: "% gross", topic: education, max_age: 5}
-  - {id: secondary_enrollment, source: worldbank, code: SE.SEC.ENRR, name: Secondary school enrollment, unit: "% gross", topic: education, max_age: 5}
-  - {id: primary_completion, source: worldbank, code: SE.PRM.CMPT.ZS, name: Primary school completion, unit: "% of relevant age group", topic: education, max_age: 5}
+  - {id: adult_literacy, source: worldbank, code: SE.ADT.LITR.ZS, name: Adult literacy, unit: "% of people aged 15+", topic: education, max_age: 6, below_half_phrase: "fewer than half of adults can read and write"}
+  - {id: youth_literacy, source: worldbank, code: SE.ADT.1524.LT.ZS, name: Youth literacy, unit: "% of people aged 15-24", topic: education, max_age: 6}
+    - {id: education_budget, source: worldbank, code: SE.XPD.TOTL.GB.ZS, name: Share of the public budget for education, unit: "% of government spending", topic: education, max_age: 5}
   - {id: education_spending, source: worldbank, code: SE.XPD.TOTL.GD.ZS, name: Public spending on education, unit: "% of GDP", topic: education, max_age: 5}
 
   # --- Technology ----------------------------------------------------------

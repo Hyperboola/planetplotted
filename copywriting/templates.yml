@@ -4,50 +4,52 @@
 # Campi: title (copertina / primo fotogramma), subtitle, reveal (solo ranked),
 # closing (ultima slide), context (frase di contesto, solo ranked),
 # caption (didascalia Instagram).
+# Le parole sono neutre ("highest", "lowest", mai "best" o "top"): molti
+# indicatori misurano cose negative, come la mortalità infantile.
 
 ranked:
   - title: "Where is {indicator_lc} highest?"
-    subtitle: "{indicator}, {unit} · {year} · Top 10 of {n_countries} countries"
+    subtitle: "{indicator}, {unit} · {year} · Top 10 of {n_countries} countries and territories"
     reveal: "#1: {top1_label}"
-    closing: "Last place: {last_name}, {last_value}"
+    closing: "Lowest: {last_name}, {last_value}"
     context: "{context_line}"
     caption: |
-      #1 in {indicator_lc}: {top1_label} ({top1_value}).
-      At the bottom of {n_countries} countries: {last_name}, {last_value}.
+      Highest {indicator_lc}: {top1_label} ({top1_value}).
+      Lowest of {n_countries} countries and territories: {last_name}, {last_value}.
       Source: {source_name} ({source_code}), {year}.
-  - title: "The top 10 countries for {indicator_lc}"
+  - title: "The 10 highest: {indicator_lc}"
     subtitle: "{indicator}, {unit} · {year}"
-    reveal: "And #1 is… {top1_label}"
-    closing: "At the other end: {last_name}, {last_value}"
+    reveal: "The highest: {top1_label}"
+    closing: "The lowest: {last_name}, {last_value}"
     context: "{context_line}"
     caption: |
-      Ranked: {indicator_lc} across {n_countries} countries in {year}.
-      Top spot: {top1_label} with {top1_value}.
+      Ranked: {indicator_lc} across {n_countries} countries and territories in {year}.
+      Highest: {top1_label} with {top1_value}.
       Source: {source_name} ({source_code}).
-  - title: "Which country leads the world in {indicator_lc}?"
+  - title: "Which countries have the highest {indicator_lc}?"
     subtitle: "{indicator}, {unit} · {year}"
     reveal: "#1: {top1_label}"
     closing: "Lowest of all: {last_name}, {last_value}"
     context: "{context_line}"
     caption: |
-      #1: {top1_label}, {top1_value}. Last: {last_name}, {last_value}.
-      Data for {n_countries} countries, {year}. Source: {source_name} ({source_code}).
-  - title: "{indicator}: who's on top?"
-    subtitle: "{unit} · {year} · {n_countries} countries"
-    reveal: "#1: {top1_label}"
-    closing: "And last: {last_name}, {last_value}"
+      Highest: {top1_label}, {top1_value}. Lowest: {last_name}, {last_value}.
+      Data for {n_countries} countries and territories, {year}. Source: {source_name} ({source_code}).
+  - title: "{indicator}: the highest and the lowest"
+    subtitle: "{unit} · {year} · {n_countries} countries and territories"
+    reveal: "Highest: {top1_label}"
+    closing: "Lowest: {last_name}, {last_value}"
     context: "{context_line}"
     caption: |
-      Where does your country rank? #1 is {top1_label} ({top1_value}).
+      Where does your country rank? Highest: {top1_label} ({top1_value}).
       Source: {source_name} ({source_code}), {year}.
 
 the_gap:
   - title: "{indicator} in {highest} is {ratio} that of {lowest}"
-    subtitle: "Highest and lowest among {n_countries} countries · {year}"
+    subtitle: "Highest and lowest among {n_countries} countries and territories · {year}"
     closing: "{highest}: {highest_value} · {lowest}: {lowest_value}"
     caption: |
       {highest}: {highest_value}. {lowest}: {lowest_value}. That's {ratio}.
-      {indicator}, {year}, {n_countries} countries. Source: {source_name} ({source_code}).
+      {indicator}, {year}, {n_countries} countries and territories. Source: {source_name} ({source_code}).
   - title: "The {indicator_lc} gap: {ratio}"
     subtitle: "{highest} vs {lowest} · {year}"
     closing: "{highest}: {highest_value} · {lowest}: {lowest_value}"
@@ -81,7 +83,7 @@ the_gap_points:
     caption: |
       Same planet, {gap_points} apart. {indicator}, {year}.
       {scope_note}. Source: {source_name} ({source_code}).
-      
+
 # Usato quando il rapporto non ha senso (valori zero o negativi)
 the_gap_diff:
   - title: "{indicator}: from {highest_value} to {lowest_value}"
@@ -99,22 +101,22 @@ the_gap_diff:
 
 mapped:
   - title: "{indicator}, mapped"
-    subtitle: "{unit} · {year} · {n_countries} countries"
+    subtitle: "{unit} · {year} · {n_countries} countries and territories"
     closing: "Highest: {top3_names}"
     caption: |
       {indicator} around the world in {year}. Highest: {top1_name} ({top1_value}).
       Source: {source_name} ({source_code}).
   - title: "Every country's {indicator_lc}"
     subtitle: "{unit} · {year}"
-    closing: "Top 3: {top3_names}"
+    closing: "Highest of all: {top3_names}"
     caption: |
-      Find your country on the map. #1 is {top1_name} with {top1_value}.
-      {n_countries} countries, {year}. Source: {source_name} ({source_code}).
+      Find your country on the map. Highest: {top1_name} with {top1_value}.
+      {n_countries} countries and territories, {year}. Source: {source_name} ({source_code}).
   - title: "The world map of {indicator_lc}"
     subtitle: "{unit} · {year}"
-    closing: "Leading: {top3_names}"
+    closing: "Highest values: {top3_names}"
     caption: |
-      {indicator}, {year}: {top1_name} leads with {top1_value}.
+      {indicator}, {year}: highest in {top1_name}, with {top1_value}.
       Source: {source_name} ({source_code}).
 
 then_vs_now:
@@ -144,16 +146,16 @@ world_in_one_chart:
     closing: "{top3_names}: {top3_share} of the total"
     caption: |
       {top1_name} alone accounts for {top1_share} of the total.
-      Sum of {n_countries} countries with data, {year}. Source: {source_name} ({source_code}).
+      Sum of {n_countries} countries and territories with data, {year}. Source: {source_name} ({source_code}).
   - title: "Who holds the world's {indicator_lc}?"
     subtitle: "Share of the total · {year}"
     closing: "Top 3: {top3_share}"
     caption: |
       {top3_names} together: {top3_share}.
-      {n_countries} countries, {year}. Source: {source_name} ({source_code}).
+      {n_countries} countries and territories, {year}. Source: {source_name} ({source_code}).
   - title: "{indicator}: the whole world, one chart"
     subtitle: "Share by country · {year}"
     closing: "#1: {top1_name}, {top1_share}"
     caption: |
-      How the world's {indicator_lc} is split between {n_countries} countries.
+      How the world's {indicator_lc} is split between {n_countries} countries and territories.
       Source: {source_name} ({source_code}), {year}.

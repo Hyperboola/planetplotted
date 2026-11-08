@@ -1,36 +1,224 @@
-# Nomi da mostrare nei post e sul sito, al posto dei nomi ufficiali World Bank.
-# Chiave: codice iso3. Il nome ufficiale resta nella colonna countries.name.
-# Per trovare altri nomi da sistemare:
-#   SELECT iso3, name FROM countries WHERE name ~ '[,()]' OR name LIKE '%Rep.%';
+# Nomi da mostrare nei post e sul sito: uno per ogni paese, per codice iso3.
+# Il commento a destra è il nome ufficiale World Bank (resta in countries.name).
+# Si modifica solo il nome prima del commento. Poi: python -m transform.clean
+#
+# Nomi politicamente contesi (es. "West Bank and Gaza"): si tiene quello
+# della fonte, che è neutro.
 
-EGY: Egypt
-KOR: South Korea
-PRK: North Korea
-IRN: Iran
-COD: DR Congo
-COG: Republic of the Congo
-GMB: The Gambia
-BHS: The Bahamas
-VEN: Venezuela
-YEM: Yemen
-SOM: Somalia
-HKG: Hong Kong
-MAC: Macao
-LAO: Laos
-KGZ: Kyrgyzstan
-SVK: Slovakia
-RUS: Russia
-SYR: Syria
-VNM: Vietnam
-FSM: Micronesia
-BRN: Brunei
-CIV: Côte d'Ivoire
-STP: São Tomé and Príncipe
-KNA: Saint Kitts and Nevis
-LCA: Saint Lucia
-VCT: Saint Vincent and the Grenadines
-MAF: Saint Martin
-SXM: Sint Maarten
-CUW: Curaçao
-VIR: US Virgin Islands
-TUR: Türkiye
+ABW: Aruba  # Aruba
+AFG: Afghanistan  # Afghanistan
+AGO: Angola  # Angola
+ALB: Albania  # Albania
+AND: Andorra  # Andorra
+ARE: United Arab Emirates  # United Arab Emirates
+ARG: Argentina  # Argentina
+ARM: Armenia  # Armenia
+ASM: American Samoa  # American Samoa
+ATG: Antigua and Barbuda  # Antigua and Barbuda
+AUS: Australia  # Australia
+AUT: Austria  # Austria
+AZE: Azerbaijan  # Azerbaijan
+BDI: Burundi  # Burundi
+BEL: Belgium  # Belgium
+BEN: Benin  # Benin
+BFA: Burkina Faso  # Burkina Faso
+BGD: Bangladesh  # Bangladesh
+BGR: Bulgaria  # Bulgaria
+BHR: Bahrain  # Bahrain
+BHS: The Bahamas  # Bahamas, The
+BIH: Bosnia and Herzegovina  # Bosnia and Herzegovina
+BLR: Belarus  # Belarus
+BLZ: Belize  # Belize
+BMU: Bermuda  # Bermuda
+BOL: Bolivia  # Bolivia
+BRA: Brazil  # Brazil
+BRB: Barbados  # Barbados
+BRN: Brunei  # Brunei Darussalam
+BTN: Bhutan  # Bhutan
+BWA: Botswana  # Botswana
+CAF: Central African Republic  # Central African Republic
+CAN: Canada  # Canada
+CHE: Switzerland  # Switzerland
+CHI: Channel Islands  # Channel Islands
+CHL: Chile  # Chile
+CHN: China  # China
+CIV: "Côte d'Ivoire"  # Cote d'Ivoire
+CMR: Cameroon  # Cameroon
+COD: DR Congo  # Congo, Dem. Rep.
+COG: Republic of the Congo  # Congo, Rep.
+COL: Colombia  # Colombia
+COM: Comoros  # Comoros
+CPV: Cabo Verde  # Cabo Verde
+CRI: Costa Rica  # Costa Rica
+CUB: Cuba  # Cuba
+CUW: Curaçao  # Curacao
+CYM: Cayman Islands  # Cayman Islands
+CYP: Cyprus  # Cyprus
+CZE: Czechia  # Czechia
+DEU: Germany  # Germany
+DJI: Djibouti  # Djibouti
+DMA: Dominica  # Dominica
+DNK: Denmark  # Denmark
+DOM: Dominican Republic  # Dominican Republic
+DZA: Algeria  # Algeria
+ECU: Ecuador  # Ecuador
+EGY: Egypt  # Egypt, Arab Rep.
+ERI: Eritrea  # Eritrea
+ESP: Spain  # Spain
+EST: Estonia  # Estonia
+ETH: Ethiopia  # Ethiopia
+FIN: Finland  # Finland
+FJI: Fiji  # Fiji
+FRA: France  # France
+FRO: Faroe Islands  # Faroe Islands
+FSM: Micronesia  # Micronesia, Fed. Sts.
+GAB: Gabon  # Gabon
+GBR: United Kingdom  # United Kingdom
+GEO: Georgia  # Georgia
+GHA: Ghana  # Ghana
+GIB: Gibraltar  # Gibraltar
+GIN: Guinea  # Guinea
+GMB: The Gambia  # Gambia, The
+GNB: Guinea-Bissau  # Guinea-Bissau
+GNQ: Equatorial Guinea  # Equatorial Guinea
+GRC: Greece  # Greece
+GRD: Grenada  # Grenada
+GRL: Greenland  # Greenland
+GTM: Guatemala  # Guatemala
+GUM: Guam  # Guam
+GUY: Guyana  # Guyana
+HKG: Hong Kong  # Hong Kong SAR, China
+HND: Honduras  # Honduras
+HRV: Croatia  # Croatia
+HTI: Haiti  # Haiti
+HUN: Hungary  # Hungary
+IDN: Indonesia  # Indonesia
+IMN: Isle of Man  # Isle of Man
+IND: India  # India
+IRL: Ireland  # Ireland
+IRN: Iran  # Iran, Islamic Rep.
+IRQ: Iraq  # Iraq
+ISL: Iceland  # Iceland
+ISR: Israel  # Israel
+ITA: Italy  # Italy
+JAM: Jamaica  # Jamaica
+JOR: Jordan  # Jordan
+JPN: Japan  # Japan
+KAZ: Kazakhstan  # Kazakhstan
+KEN: Kenya  # Kenya
+KGZ: Kyrgyzstan  # Kyrgyz Republic
+KHM: Cambodia  # Cambodia
+KIR: Kiribati  # Kiribati
+KNA: Saint Kitts and Nevis  # St. Kitts and Nevis
+KOR: South Korea  # Korea, Rep.
+KWT: Kuwait  # Kuwait
+LAO: Laos  # Lao PDR
+LBN: Lebanon  # Lebanon
+LBR: Liberia  # Liberia
+LBY: Libya  # Libya
+LCA: Saint Lucia  # St. Lucia
+LIE: Liechtenstein  # Liechtenstein
+LKA: Sri Lanka  # Sri Lanka
+LSO: Lesotho  # Lesotho
+LTU: Lithuania  # Lithuania
+LUX: Luxembourg  # Luxembourg
+LVA: Latvia  # Latvia
+MAC: Macao  # Macao SAR, China
+MAF: Saint Martin  # St. Martin (French part)
+MAR: Morocco  # Morocco
+MCO: Monaco  # Monaco
+MDA: Moldova  # Moldova
+MDG: Madagascar  # Madagascar
+MDV: Maldives  # Maldives
+MEX: Mexico  # Mexico
+MHL: Marshall Islands  # Marshall Islands
+MKD: North Macedonia  # North Macedonia
+MLI: Mali  # Mali
+MLT: Malta  # Malta
+MMR: Myanmar  # Myanmar
+MNE: Montenegro  # Montenegro
+MNG: Mongolia  # Mongolia
+MNP: Northern Mariana Islands  # Northern Mariana Islands
+MOZ: Mozambique  # Mozambique
+MRT: Mauritania  # Mauritania
+MUS: Mauritius  # Mauritius
+MWI: Malawi  # Malawi
+MYS: Malaysia  # Malaysia
+NAM: Namibia  # Namibia
+NCL: New Caledonia  # New Caledonia
+NER: Niger  # Niger
+NGA: Nigeria  # Nigeria
+NIC: Nicaragua  # Nicaragua
+NLD: Netherlands  # Netherlands
+NOR: Norway  # Norway
+NPL: Nepal  # Nepal
+NRU: Nauru  # Naoero
+NZL: New Zealand  # New Zealand
+OMN: Oman  # Oman
+PAK: Pakistan  # Pakistan
+PAN: Panama  # Panama
+PER: Peru  # Peru
+PHL: Philippines  # Philippines
+PLW: Palau  # Palau
+PNG: Papua New Guinea  # Papua New Guinea
+POL: Poland  # Poland
+PRI: Puerto Rico (US)  # Puerto Rico (US)
+PRK: North Korea  # Korea, Dem. People's Rep.
+PRT: Portugal  # Portugal
+PRY: Paraguay  # Paraguay
+PSE: West Bank and Gaza  # West Bank and Gaza
+PYF: French Polynesia  # French Polynesia
+QAT: Qatar  # Qatar
+ROU: Romania  # Romania
+RUS: Russia  # Russian Federation
+RWA: Rwanda  # Rwanda
+SAU: Saudi Arabia  # Saudi Arabia
+SDN: Sudan  # Sudan
+SEN: Senegal  # Senegal
+SGP: Singapore  # Singapore
+SLB: Solomon Islands  # Solomon Islands
+SLE: Sierra Leone  # Sierra Leone
+SLV: El Salvador  # El Salvador
+SMR: San Marino  # San Marino
+SOM: Somalia  # Somalia, Fed. Rep.
+SRB: Serbia  # Serbia
+SSD: South Sudan  # South Sudan
+STP: São Tomé and Príncipe  # Sao Tome and Principe
+SUR: Suriname  # Suriname
+SVK: Slovakia  # Slovak Republic
+SVN: Slovenia  # Slovenia
+SWE: Sweden  # Sweden
+SWZ: Eswatini  # Eswatini
+SXM: Sint Maarten  # Sint Maarten (Dutch part)
+SYC: Seychelles  # Seychelles
+SYR: Syria  # Syrian Arab Republic
+TCA: Turks and Caicos Islands  # Turks and Caicos Islands
+TCD: Chad  # Chad
+TGO: Togo  # Togo
+THA: Thailand  # Thailand
+TJK: Tajikistan  # Tajikistan
+TKM: Turkmenistan  # Turkmenistan
+TLS: Timor-Leste  # Timor-Leste
+TON: Tonga  # Tonga
+TTO: Trinidad and Tobago  # Trinidad and Tobago
+TUN: Tunisia  # Tunisia
+TUR: Türkiye  # Turkiye
+TUV: Tuvalu  # Tuvalu
+TZA: Tanzania  # Tanzania
+UGA: Uganda  # Uganda
+UKR: Ukraine  # Ukraine
+URY: Uruguay  # Uruguay
+USA: United States  # United States
+UZB: Uzbekistan  # Uzbekistan
+VCT: Saint Vincent and the Grenadines  # St. Vincent and the Grenadines
+VEN: Venezuela  # Venezuela, RB
+VGB: British Virgin Islands  # British Virgin Islands
+VIR: US Virgin Islands  # Virgin Islands (U.S.)
+VNM: Vietnam  # Viet Nam
+VUT: Vanuatu  # Vanuatu
+WSM: Samoa  # Samoa
+XKX: Kosovo  # Kosovo
+YEM: Yemen  # Yemen, Rep.
+ZAF: South Africa  # South Africa
+ZMB: Zambia  # Zambia
+ZWE: Zimbabwe  # Zimbabwe

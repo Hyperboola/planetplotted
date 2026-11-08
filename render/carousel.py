@@ -17,6 +17,16 @@ LOGO = ROOT / "brand" / "assets" / "mark_dark-bg.png"
 LOGO_SMALL = ROOT / "brand" / "assets" / "mark_simple_dark-bg.png"
 
 
+def bar_max(unit: str, values) -> float:
+    """Valore che corrisponde alla barra piena.
+    Le quote "% of ..." (0-100) si misurano sul 100%; i tassi ("% per year")
+    e i rapporti lordi che superano 100 si misurano sul valore più alto."""
+    top = max(values)
+    if unit.startswith("% of") and 0 <= min(values) and top <= 100:
+        return 100.0
+    return top if top > 0 else 1.0
+
+
 def source_line(v) -> str:
     return f"Source: {v['source_name']} · {v['year']}"
 
@@ -77,10 +87,9 @@ def ranking_rows(s: Slide, rows, y, vmax, highlight, row_h=88):
 
 def ranked(t, v, p):
     unit = p["unit"]
-    pct = unit.startswith("%")
     top = [dict(r, raw=x["value"]) for r, x in zip(v["_rows_top"], p["top"])]
     bottom = [dict(r, raw=x["value"]) for r, x in zip(v["_rows_bottom"], p["bottom"])]
-    vmax = 100.0 if pct else max(r["raw"] for r in top)
+    vmax = bar_max(unit, [r["raw"] for r in top + bottom])
     first = {top[0]["rank"]}
 
     def preview(s, y):
@@ -99,7 +108,7 @@ def ranked(t, v, p):
     y = s2.text(MARGIN, MARGIN, f"Top 10 · {unit}", size=30, weight="semibold", color=MUTED)
     y = s2.text(MARGIN, y + 24, t["reveal"], size=50, weight="bold", max_width=WIDTH)
     ranking_rows(s2, top, y + 40, vmax, first)
-    s2.footer(source_line(v) + (" · bars start at 0" if not pct else ""))
+    s2.footer(source_line(v) + " · bars start at 0")
 
     s3 = Slide()
     y = s3.text(MARGIN, MARGIN, f"Bottom 5 of {v['n_countries']}", size=30,
@@ -206,8 +215,11 @@ def mapped(t, v, p):
     y += 60
     y += worldmap.draw(s2.ax, MARGIN - 40, y, WIDTH + 80, colors, NO_DATA, BG) + 50
     # Legenda: 5 classi con lo stesso numero di paesi, più "No data"
-    y = s2.text(MARGIN, y, "Each colour holds about the same number of countries",
-                size=28, color=MUTED) + 20
+    note = "Each colour holds about the same number of countries"
+    if p.get("year_from") and p["year_from"] != p["year"]:
+        note += f". Latest available data for each country, {v['year']}"
+    y = s2.text(MARGIN, y, note + ".", size=28, color=MUTED, max_width=WIDTH,
+                line_height=1.3) + 20
     col_w = WIDTH / 2
     for i, (c, label) in enumerate(list(zip(MAP_SCALE, labels)) + [(NO_DATA, "No data")]):
         lx = MARGIN + (i % 2) * col_w
@@ -217,14 +229,15 @@ def mapped(t, v, p):
     s2.footer(source_line(v))
 
     s3 = Slide()
-    ordered = sorted(p["values"], key=lambda r: r["value"], reverse=True)
+    listed = [r for r in p["values"] if r.get("in_list", True)]
+    ordered = sorted(listed, key=lambda r: (-r["value"], r["name"]))
     disp = [fmt(r["value"]) for r in ordered]
     ranks = competition_ranks(disp)
-    vmax = 100.0 if unit.startswith("%") else max(r["value"] for r in ordered)
+    vmax = bar_max(unit, [r["value"] for r in ordered])
     rows = [{"rank": k, "name": r["name"], "value": d, "raw": r["value"]}
             for r, k, d in zip(ordered, ranks, disp)]
-    y = s3.text(MARGIN, MARGIN, f"Highest and lowest of {v['n_countries']}", size=30,
-                weight="semibold", color=MUTED)
+    y = s3.text(MARGIN, MARGIN, f"Highest and lowest of {v['n_list']} {v['list_note']}",
+                size=30, weight="semibold", color=MUTED, max_width=WIDTH)
     y = s3.text(MARGIN, y + 24, t["closing"], size=46, weight="bold", max_width=WIDTH)
     y = ranking_rows(s3, rows[:5], y + 30, vmax, {rows[0]["rank"]}, row_h=82)
     s3.line(MARGIN, y + 10, CAROUSEL[0] - MARGIN, y + 10)

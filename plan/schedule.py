@@ -48,6 +48,8 @@ def choose_indicator(items, fmt, topic, last_used, exclude, day, no_repeat_days)
             return False
         if fmt == "world_in_one_chart" and not i.get("additive", False):
             return False
+        if fmt == "the_gap" and i.get("additive", False):
+            return False
         last = last_used.get(i["id"])
         return last is None or (day - last).days >= no_repeat_days
 
@@ -82,6 +84,7 @@ def fetch_last_used(cur, day):
     """, (day,))
     return dict(cur.fetchall())
 
+
 def fetch_population(cur) -> dict:
     """Ultima popolazione disponibile per ogni paese."""
     cur.execute("""
@@ -90,19 +93,25 @@ def fetch_population(cur) -> dict:
     """)
     return dict(cur.fetchall())
 
+
 def build_payload(item, fmt, rows, day, population=None, min_population=0):
-    year = formats.reference_year(rows, day.year, item["max_age"])
-    if year is None:
-        return None
-    if fmt == "the_gap":
-        payload = formats.the_gap(rows, year, item["unit"], population, min_population)
+    if fmt == "mapped":
+        # Mappa: ultimo dato per paese, non un solo anno per tutti
+        payload = formats.mapped(rows, day.year, item["max_age"], population, min_population)
     else:
-        payload = formats.BUILDERS[fmt](rows, year)
+        year = formats.reference_year(rows, day.year, item["max_age"])
+        if year is None:
+            return None
+        if fmt == "the_gap":
+            payload = formats.the_gap(rows, year, item["unit"], population, min_population)
+        else:
+            payload = formats.BUILDERS[fmt](rows, year)
     if payload is None:
         return None
     payload.update({
         "indicator": item["name"], "unit": item["unit"],
         "source": item["source"], "source_code": item["code"],
+        "below_half_phrase": item.get("below_half_phrase"),
     })
     return payload
 
@@ -142,7 +151,8 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
                                             day, sched["no_repeat_days"])
                     if item is None:
                         break
-                    payload = build_payload(item, fmt, fetch_rows(cur, item["id"]), day, population, min_pop)
+                    payload = build_payload(item, fmt, fetch_rows(cur, item["id"]), day,
+                                            population, min_pop)
                     if payload:
                         break
                     tried.add(item["id"])
