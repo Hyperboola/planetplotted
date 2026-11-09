@@ -2,20 +2,23 @@
 # Avvio:  docker compose up -d --build
 # Airflow: http://localhost:8080  (password: vedi README)
 
+# Nome fisso del progetto: non dipende dal nome della cartella
+name: planetplotted
+
 services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: worldviz
-      POSTGRES_PASSWORD: worldviz
-      POSTGRES_DB: worldviz
+      POSTGRES_USER: planetplotted
+      POSTGRES_PASSWORD: planetplotted
+      POSTGRES_DB: planetplotted
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U worldviz -d worldviz"]
+      test: ["CMD-SHELL", "pg_isready -U planetplotted -d planetplotted"]
       interval: 5s
       retries: 10
 
@@ -30,15 +33,15 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      AIRFLOW__CORE__DAGS_FOLDER: /opt/worldviz/dags
-      PYTHONPATH: /opt/worldviz
-      PG_DSN: postgresql://worldviz:worldviz@postgres:5432/worldviz
-      LOCAL_BRONZE_DIR: /opt/worldviz/data/bronze
-      RENDERS_DIR: /opt/worldviz/data/renders
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/planetplotted/dags
+      PYTHONPATH: /opt/planetplotted
+      PG_DSN: postgresql://planetplotted:planetplotted@postgres:5432/planetplotted
+      LOCAL_BRONZE_DIR: /opt/planetplotted/data/bronze
+      RENDERS_DIR: /opt/planetplotted/data/renders
     ports:
       - "8080:8080"
     volumes:
-      - .:/opt/worldviz
+      - .:/opt/planetplotted
 
 volumes:
   pgdata:

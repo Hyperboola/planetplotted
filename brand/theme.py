@@ -1,12 +1,12 @@
-"""World Visualization – brand "Midnight & Coral".
+"""Planet Plotted – brand "Midnight & Coral".
 
 Colori e identità usati dal render. I loghi pronti sono in brand/assets,
 i font in brand/fonts (python -m serving.render.setup_fonts) e i confini
 dei paesi in brand/maps (python -m serving.render.setup_map).
 """
 
-BRAND_NAME = "World Visualization"
-HANDLE = "@worldvisualization"  # aggiorna con l'handle definitivo
+BRAND_NAME = "Planet Plotted"
+HANDLE = "@planetplotted"  # aggiorna con l'handle definitivo
 
 MIDNIGHT = "#0E1A2B"    # sfondo
 MIST = "#E9EEF3"        # testo e bolle su fondo scuro

@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Bronze: S3 (o compatibile) se configurato, altrimenti cartella locale
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")          # es. https://<account>.r2.cloudflarestorage.com
-S3_BUCKET = os.getenv("S3_BUCKET", "worldviz-bronze")
+S3_BUCKET = os.getenv("S3_BUCKET", "planetplotted-bronze")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 LOCAL_BRONZE_DIR = Path(os.getenv("LOCAL_BRONZE_DIR", ROOT / "data" / "bronze"))
@@ -21,7 +21,7 @@ RENDERS_DIR = Path(os.getenv("RENDERS_DIR", ROOT / "data" / "renders"))
 
 # Database: schemi silver e gold
 PG_DSN = os.getenv(
-    "PG_DSN", "postgresql://worldviz:worldviz@localhost:5432/worldviz"
+    "PG_DSN", "postgresql://planetplotted:planetplotted@localhost:5432/planetplotted"
 )
 
 # Catalogo degli indicatori

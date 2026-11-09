@@ -1,4 +1,4 @@
-# World Visualization
+# Planet Plotted
 
 Pipeline dati che ogni giorno scarica indicatori mondiali dalla World Bank,
 li pulisce, decide cosa pubblicare, scrive i testi e crea i post per Instagram
@@ -126,16 +126,16 @@ Font e confini dei paesi sono già nel repository. Per rigenerarli:
   `docker compose exec airflow cat /opt/airflow/standalone_admin_password.txt`.
   Se il login non funziona, crea l'utente:
   `docker compose exec airflow airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com`
-- **Postgres:** `localhost:5432`, database, utente e password `worldviz`
+- **Postgres:** `localhost:5432`, database, utente e password `planetplotted`
   (estensione PostgreSQL di VS Code o DBeaver). Tabelle negli schemi `silver` e `gold`.
 
-In Airflow attiva il DAG `worldviz_daily`: gira ogni giorno alle 4:00 UTC.
+In Airflow attiva il DAG `planetplotted_daily`: gira ogni giorno alle 4:00 UTC.
 
 ## Lanciare le tappe a mano
 
 ```bash
 docker compose exec airflow bash
-cd /opt/worldviz
+cd /opt/planetplotted
 python -m bronze.worldbank --countries --run-date 2026-11-08
 python -m bronze.worldbank --run-date 2026-11-08
 python -m silver.clean --run-date 2026-11-08

@@ -11,19 +11,19 @@ import datetime as dt
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 
-PROJECT = "cd /opt/worldviz && python -m"
+PROJECT = "cd /opt/planetplotted && python -m"
 RUN_DATE = "{{ ds }}"                         # giorno dell'estrazione
 POST_DATE = "{{ data_interval_end | ds }}"    # giorno dei post da preparare
 
 with DAG(
-    dag_id="worldviz_daily",
+    dag_id="planetplotted_daily",
     description="World Bank -> bronze -> silver -> gold -> serving",
     schedule="0 4 * * *",          # ogni giorno alle 4:00 UTC
     start_date=dt.datetime(2026, 11, 1),
     catchup=False,
     max_active_runs=1,
     default_args={"retries": 2, "retry_delay": dt.timedelta(minutes=10)},
-    tags=["worldviz", "etl"],
+    tags=["planetplotted", "etl"],
 ) as dag:
 
     bronze_countries = BashOperator(
