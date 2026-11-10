@@ -23,3 +23,6 @@ standalone_admin_password.txt
 .DS_Store
 .idea/
 .vscode/
+
+# Strumenti
+.ruff_cache/

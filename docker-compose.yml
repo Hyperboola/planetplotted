@@ -1,6 +1,7 @@
 # Ambiente locale: Postgres (dati + metadati Airflow) e Airflow.
-# Avvio:  docker compose up -d --build
+# Avvio:  cp .env.example .env  &&  docker compose up -d --build
 # Airflow: http://localhost:8080  (password: vedi README)
+# Le credenziali arrivano dal file .env, non sono scritte qui.
 
 # Nome fisso del progetto: non dipende dal nome della cartella
 name: planetplotted
@@ -9,16 +10,16 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: planetplotted
-      POSTGRES_PASSWORD: planetplotted
-      POSTGRES_DB: planetplotted
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d:ro
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U planetplotted -d planetplotted"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       retries: 10
 
@@ -34,13 +35,14 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__DAGS_FOLDER: /opt/planetplotted/dags
-      PYTHONPATH: /opt/planetplotted
-      PG_DSN: postgresql://planetplotted:planetplotted@postgres:5432/planetplotted
+      PG_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       LOCAL_BRONZE_DIR: /opt/planetplotted/data/bronze
       RENDERS_DIR: /opt/planetplotted/data/renders
     ports:
       - "8080:8080"
     volumes:
+      # In locale il codice è montato: le modifiche sono subito attive.
+      # In produzione si usa l'immagine, che contiene già il codice.
       - .:/opt/planetplotted
 
 volumes:

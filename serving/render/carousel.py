@@ -9,8 +9,19 @@ e restituisce una lista di Slide.
 
 from gold.copywriting.numbers import fmt_value as n_fmt
 from gold.copywriting.numbers import with_unit as n_with_unit
-from serving.render.base import (ACCENT, BG, BRAND, CAROUSEL, FG, HANDLE, LINE, MARGIN, MUTED,
-                                 ROOT, Slide)
+from serving.render.base import (
+    ACCENT,
+    BG,
+    BRAND,
+    CAROUSEL,
+    FG,
+    HANDLE,
+    LINE,
+    MARGIN,
+    MUTED,
+    ROOT,
+    Slide,
+)
 
 WIDTH = CAROUSEL[0] - 2 * MARGIN
 LOGO = ROOT / "brand" / "assets" / "mark_dark-bg.png"

@@ -1,0 +1,8 @@
+# Controllo dello stile e degli errori comuni (lanciato dalla CI)
+line-length = 110
+target-version = "py312"
+
+[lint]
+# E/W stile, F errori (variabili inutilizzate, import mancanti), I ordine degli import, B bug comuni
+select = ["E", "W", "F", "I", "B"]
+ignore = ["B905", "E731"]   # zip senza strict e lambda assegnate: scelte volute nel progetto

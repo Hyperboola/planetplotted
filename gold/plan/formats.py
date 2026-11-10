@@ -5,7 +5,6 @@ il payload del post. Nessun valore viene stimato o interpolato:
 si usano solo dati presenti nel database.
 """
 import statistics
-
 from collections import defaultdict
 
 FORMATS = {"ranked", "mapped", "then_vs_now", "world_in_one_chart", "the_gap"}

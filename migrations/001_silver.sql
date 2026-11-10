@@ -1,6 +1,6 @@
 -- SILVER: dati puliti e validati, in formato "lungo".
--- Eseguito automaticamente al primo avvio del container Postgres
--- (solo con il database vuoto: per ripartire, docker compose down -v).
+-- Applicata da: python -m common.migrate (una sola volta, poi registrata
+-- in public.schema_migrations). Per cambiare lo schema: nuovo file 003_...
 
 CREATE SCHEMA IF NOT EXISTS silver;
 

@@ -1,6 +1,6 @@
 """DAG Airflow: dalla World Bank ai post pronti, strato per strato.
 
-bronze (extract) -> silver (pulizia) -> gold (plan e copy) -> serving (render)
+migrazioni -> bronze (extract) -> silver (pulizia) -> gold (plan e copy) -> serving (render)
 
 Ogni task lancia uno script indipendente: lo stesso comando funziona
 anche a mano dal terminale, senza Airflow.
@@ -25,6 +25,12 @@ with DAG(
     default_args={"retries": 2, "retry_delay": dt.timedelta(minutes=10)},
     tags=["planetplotted", "etl"],
 ) as dag:
+
+    # Prima di tutto lo schema del database è aggiornato (se lo è già, non fa nulla)
+    db_migrate = BashOperator(
+        task_id="db_migrate",
+        bash_command=f"{PROJECT} common.migrate",
+    )
 
     bronze_countries = BashOperator(
         task_id="bronze_countries",
@@ -56,4 +62,4 @@ with DAG(
         bash_command=f"{PROJECT} serving.render.post --date {POST_DATE}",
     )
 
-    [bronze_countries, bronze_indicators] >> silver >> gold_plan >> gold_copy >> serving_render
+    db_migrate >> [bronze_countries, bronze_indicators] >> silver >> gold_plan >> gold_copy >> serving_render

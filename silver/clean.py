@@ -103,31 +103,35 @@ def load_indicator(conn, item: dict, rows: list[dict], run_date: str) -> None:
               for r in rows])
 
 
-def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
-    p = argparse.ArgumentParser()
-    p.add_argument("--run-date", required=True)
-    p.add_argument("--indicator")
-    a = p.parse_args()
-
+def run(run_date: str, indicator: str | None = None) -> None:
+    """Pulisce il bronze di un giorno e lo carica nello schema silver."""
     countries = clean_countries(
-        storage.read_json(storage.bronze_key("worldbank", "countries", a.run_date)),
+        storage.read_json(storage.bronze_key("worldbank", "countries", run_date)),
         load_display_names())
     valid = {c["iso3"] for c in countries}
-    items = [catalog.get(a.indicator)] if a.indicator else catalog.load("worldbank")
+    items = [catalog.get(indicator)] if indicator else catalog.load("worldbank")
 
     conn = db.connect()
     try:
         with conn:  # una transazione: o si carica tutto o niente
             load_countries(conn, countries)
             for item in items:
-                raw = storage.read_json(storage.bronze_key("worldbank", item["id"], a.run_date))
+                raw = storage.read_json(storage.bronze_key("worldbank", item["id"], run_date))
                 rows, dropped = clean_worldbank_rows(raw, valid)
                 checks.check_dataset(rows, item["id"])
-                load_indicator(conn, item, rows, a.run_date)
+                load_indicator(conn, item, rows, run_date)
                 log.info("%s: %s righe caricate, scartate %s", item["id"], len(rows), dropped)
     finally:
         conn.close()
+
+
+def main():
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+    p = argparse.ArgumentParser()
+    p.add_argument("--run-date", required=True)
+    p.add_argument("--indicator")
+    a = p.parse_args()
+    run(a.run_date, a.indicator)
 
 
 if __name__ == "__main__":

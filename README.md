@@ -28,7 +28,7 @@ flowchart LR
 | **silver** | `silver/clean.py` | bronze | schema `silver` |
 | **gold** · plan | `gold/plan/schedule.py` | `silver` | `gold.post_queue` (payload) |
 | **gold** · copy | `gold/copywriting/generate.py` | `gold.post_queue` | `gold.post_queue` (copy) |
-| **serving** · render | `serving/render/post.py` | `gold.post_queue` | `data/renders/` (slide PNG) |
+| **serving** · render | `serving/render/post.py` | `gold.post_queue` | `data/renders/` (e bucket S3/R2) |
 
 ## Struttura
 
@@ -46,10 +46,13 @@ gold/              dati pronti all'uso
 serving/           output pubblicabili
   render/            slide dei caroselli, mappa Equal Earth, treemap, font e confini
 catalog/           configurazione: indicatori, programmazione, nomi dei paesi
-common/            config, connessione al database, storage bronze
+common/            config, connessione al database, storage, migrazioni
+migrations/        schema del database (silver e gold), un file per modifica
 brand/             colori, loghi, font Manrope, confini dei paesi
 dags/              DAG di Airflow
-sql/               schema del database (silver e gold)
+tests/             test unitari e di integrazione (pipeline completa su Postgres)
+docker/            solo per il locale: creazione del database di Airflow
+.github/workflows/ CI/CD: stile, test, pubblicazione dell'immagine
 data/              file generati (non versionati): bronze/ e renders/
 ```
 
@@ -116,7 +119,12 @@ Serve Docker Desktop.
 ```bash
 cp .env.example .env
 docker compose up -d --build
+docker compose exec airflow python -m common.migrate
 ```
+
+Le credenziali stanno solo nel file `.env` (mai nel codice). L'ultimo comando crea
+lo schema del database; il DAG lo rilancia comunque a ogni giro, e se lo schema
+è già aggiornato non fa nulla.
 
 Font e confini dei paesi sono già nel repository. Per rigenerarli:
 `python -m serving.render.setup_fonts` e `python -m serving.render.setup_map`.
@@ -135,6 +143,7 @@ In Airflow attiva il DAG `planetplotted_daily`: gira ogni giorno alle 4:00 UTC.
 ```bash
 docker compose exec airflow bash
 cd /opt/planetplotted
+python -m common.migrate
 python -m bronze.worldbank --countries --run-date 2026-11-08
 python -m bronze.worldbank --run-date 2026-11-08
 python -m silver.clean --run-date 2026-11-08
@@ -143,7 +152,7 @@ python -m gold.copywriting.generate --date 2026-11-09
 python -m serving.render.post --date 2026-11-09
 ```
 
-- `gold.plan.schedule --replace` rifà i post del giorno non ancora renderizzati e mai modificati a mano.
+- `gold.plan.schedule --replace` rifà i post del giorno non ancora approvati né pubblicati, e mai modificati a mano.
 - `serving.render.post --post-id 7` renderizza un solo post.
 - `bronze.check_catalog` controlla il catalogo prima di aggiungere indicatori.
 
@@ -198,16 +207,39 @@ Il plan ricorda cosa ha già pianificato, leggendo `gold.post_queue`:
   candidati, si passa a un altro tema.
 
 Per questo `gold.post_queue` non va svuotata durante l'uso normale: è lo storico.
-`--replace` cancella solo i post non ancora renderizzati e mai modificati a mano.
+`--replace` cancella solo i post non ancora approvati né pubblicati, e mai modificati a mano.
+
+Stati di un post: `planned` (numeri pronti) → `copy_ready` (testi pronti) →
+`rendered` (slide pronte) → `approved` → `published`.
 
 ## Quando ricostruire Docker
 
 - Codice Python, YAML o DAG: **niente**, la cartella è montata nel container.
 - `requirements.txt` o `Dockerfile`: `docker compose up -d --build`.
 - `docker-compose.yml`: `docker compose up -d`.
-- File in `sql/`: girano solo con il database vuoto. Per ripartire da zero:
-  `docker compose down -v`, poi `docker compose up -d` e rilancia la pipeline
-  (i dati si riscaricano dalla World Bank).
+- Schema del database: non si modifica un file di `migrations/` già applicato, se ne
+  aggiunge uno nuovo (`003_...sql`) e si lancia `python -m common.migrate`.
+- Per ripartire da zero: `docker compose down -v`, poi `docker compose up -d`,
+  `python -m common.migrate` e la pipeline (i dati si riscaricano dalla World Bank).
+
+## Test e CI/CD
+
+```bash
+docker compose exec airflow python -m pytest -q
+```
+
+- **Unitari** (`tests/unit`): formattazione dei numeri, regole dei formati, memoria del plan,
+  pulizia del silver, modelli di testo, treemap ed etichette.
+- **Integrazione** (`tests/integration`): migrazioni, silver, plan, copy e render di una settimana
+  intera su un Postgres vero, con dati finti. Usa `TEST_PG_DSN`, un database dedicato che viene
+  svuotato: non va mai puntato al database di sviluppo. Senza `TEST_PG_DSN` viene saltato.
+
+La CI (`.github/workflows/ci.yml`) parte a ogni push e pull request:
+1. **lint:** `ruff check .` (regole in `ruff.toml`);
+2. **test:** costruisce l'immagine Docker e lancia tutti i test dentro di essa,
+   con un Postgres temporaneo, cioè con le stesse librerie della produzione;
+3. **publish** (solo su `main`, se i primi due passano): pubblica l'immagine su
+   GitHub Container Registry, `ghcr.io/<utente>/planetplotted:latest` e `:<commit>`.
 
 ## Messa in produzione
 
@@ -222,7 +254,8 @@ e si cancella la cartella `data/renders`. Attenzione: svuotare la tabella azzera
 ## Prossimi passi
 
 1. Reel (video MP4) dagli stessi dati dei caroselli.
-2. CI/CD con GitHub Actions: test automatici a ogni push.
-3. Indicatori pro capite affiancati ai totali (es. CO2 per persona e totale nazionale).
-4. API (FastAPI) e sito (Next.js) con grafici e area admin.
-5. Produzione: Postgres serverless, object storage, Airflow su macchina virtuale, Terraform.
+2. Cloud con Terraform: Postgres serverless, object storage, Airflow su macchina virtuale,
+   deploy dell'immagine pubblicata dalla CI, avvisi in caso di errore.
+3. API (FastAPI), sito (Next.js) con grafici e area admin.
+4. Go-live: pagina Instagram e sito.
+5. Indicatori pro capite affiancati ai totali (es. CO2 per persona e totale nazionale).

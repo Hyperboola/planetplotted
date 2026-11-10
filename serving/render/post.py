@@ -16,13 +16,12 @@ import logging
 import shutil
 from pathlib import Path
 
-from common import config, db
+from common import config, db, storage
 from gold.copywriting import values
 from gold.copywriting.generate import resolve
 from serving.render import carousel
 
 log = logging.getLogger("serving.render")
-OUT_DIR = config.RENDERS_DIR
 
 
 def render_carousel(post: dict) -> list[str]:
@@ -32,7 +31,8 @@ def render_carousel(post: dict) -> list[str]:
         raise NotImplementedError(f"carosello non ancora disponibile per '{fmt}'")
     vals = values.build(fmt, payload)
     texts = resolve(post["copy"], vals)
-    folder = OUT_DIR / post["slot_at"].strftime("%Y-%m-%d") / f"post_{post['id']}"
+    out_dir = config.RENDERS_DIR
+    folder = out_dir / post["slot_at"].strftime("%Y-%m-%d") / f"post_{post['id']}"
     if folder.exists():  # un nuovo render sostituisce del tutto il precedente
         shutil.rmtree(folder)
     slides = carousel.BUILDERS[fmt](texts, vals, payload)
@@ -40,7 +40,9 @@ def render_carousel(post: dict) -> list[str]:
     for i, slide in enumerate(slides, 1):
         path = slide.save(folder / f"slide_{i:02d}.png")
         # Percorso relativo alla cartella dei render: vale uguale in locale e su S3
-        paths.append(str(Path(path).relative_to(OUT_DIR)))
+        key = str(Path(path).relative_to(out_dir))
+        storage.publish_render(Path(path), key)
+        paths.append(key)
     return paths
 
 
@@ -59,7 +61,7 @@ def remove_stale(cur, day) -> None:
     """Cancella le cartelle di post che non esistono più nel database
     (per esempio dopo un plan --replace), così in data/renders restano
     solo i post veri del giorno."""
-    folder = OUT_DIR / day.isoformat()
+    folder = config.RENDERS_DIR / day.isoformat()
     if not folder.exists():
         return
     cur.execute("SELECT id FROM gold.post_queue WHERE slot_at::date = %s", (day,))
@@ -86,14 +88,16 @@ def run(post_id=None, day=None) -> int:
                 except NotImplementedError as exc:
                     log.warning("post %s: %s", post["id"], exc)
                     continue
+                # Il post è pronto da pubblicare. Quando ci sarà il reel, i post
+                # "reel" diventeranno rendered solo con il video.
                 cur.execute("""
                     UPDATE gold.post_queue SET carousel_files = %s, rendered_at = now(),
-                        updated_at = now()
+                        status = 'rendered', updated_at = now()
                     WHERE id = %s
                 """, (json.dumps(files), post["id"]))
                 done += 1
                 log.info("post %s (%s): %s slide in %s", post["id"], post["format"],
-                         len(files), OUT_DIR / Path(files[0]).parent)
+                         len(files), config.RENDERS_DIR / Path(files[0]).parent)
     finally:
         conn.close()
     return done

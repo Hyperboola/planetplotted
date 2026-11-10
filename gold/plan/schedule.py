@@ -2,7 +2,7 @@
 
 Uso:
     python -m gold.plan.schedule --date 2026-11-07
-    python -m gold.plan.schedule --date 2026-11-07 --replace   # rifà i post ancora 'planned'
+    python -m gold.plan.schedule --date 2026-11-07 --replace   # rifà i post non ancora approvati
 """
 
 import argparse
@@ -148,11 +148,11 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
     try:
         with conn, conn.cursor() as cur:
             if replace:
-                # Rifà solo i post non ancora renderizzati e mai modificati a mano
+                # Rifà solo i post non ancora approvati né pubblicati, e mai modificati a mano
                 cur.execute("""
                     DELETE FROM gold.post_queue
                     WHERE slot_at::date = %s
-                      AND status IN ('planned', 'copy_ready')
+                      AND status IN ('planned', 'copy_ready', 'rendered')
                       AND NOT copy_edited
                 """, (day,))
             cur.execute("SELECT count(*) FROM gold.post_queue WHERE slot_at::date = %s", (day,))
