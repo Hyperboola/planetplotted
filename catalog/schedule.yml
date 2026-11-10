@@ -5,6 +5,7 @@ slots:
   - {time: "17:00", media: carousel}
 
 no_repeat_days: 7   # un indicatore non torna prima di 7 giorni
+no_repeat_pair_days: 90   # la stessa coppia indicatore + formato non torna prima di 90 giorni
 gap_min_population: 1000000   # The Gap e liste delle mappe: solo paesi con almeno 1M di abitanti
 
 # [formato, tema] per ogni slot: 14 post a settimana, 14 temi diversi.

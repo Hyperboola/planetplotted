@@ -47,7 +47,7 @@ indicators:
   # --- Education -----------------------------------------------------------
   - {id: adult_literacy, source: worldbank, code: SE.ADT.LITR.ZS, name: Adult literacy, unit: "% of people aged 15+", topic: education, max_age: 6, below_half_phrase: "fewer than half of adults can read and write"}
   - {id: youth_literacy, source: worldbank, code: SE.ADT.1524.LT.ZS, name: Youth literacy, unit: "% of people aged 15-24", topic: education, max_age: 6}
-  - {id: education_budget, source: worldbank, code: SE.XPD.TOTL.GB.ZS, name: Education's share of public spending, unit: "% of government spending", topic: education, max_age: 5}
+  - {id: education_budget, source: worldbank, code: SE.XPD.TOTL.GB.ZS, name: Education spending as a share of the budget, unit: "% of government spending", topic: education, max_age: 5}
   - {id: education_spending, source: worldbank, code: SE.XPD.TOTL.GD.ZS, name: Public spending on education, unit: "% of GDP", topic: education, max_age: 5}
 
   # --- Technology ----------------------------------------------------------

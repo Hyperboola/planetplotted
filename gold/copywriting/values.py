@@ -115,15 +115,51 @@ def build(fmt: str, p: dict) -> dict:
         })
 
     elif fmt == "then_vs_now":
-        r, d = p["risers"][0], p["fallers"][0]
-        v.update({"base_year": str(p["base_year"]),
-                  "riser_name": r["name"], "riser_then": f(r["then"]), "riser_now": f(r["now"]),
-                  "faller_name": d["name"], "faller_then": f(d["then"]), "faller_now": f(d["now"])})
+        pct = unit.startswith("%")
+
+        def change(x):
+            """+12.3 pts per le percentuali, +1.2 million people per i valori assoluti."""
+            sign = "+" if x > 0 else ("−" if x < 0 else "")
+            body = f"{abs(x):.1f} pts" if pct else n.with_unit(f(abs(x)), unit)
+            return sign + body
+
+        places = f"{p['n_countries']} countries and territories"
+        trend = f"Up in {p['rose']} of {places}, down in {p['fell']}"
+        if p["unchanged"]:
+            trend += f", unchanged in {p['unchanged']}"
+        m = p["movers"][0] if p["movers"] else None
+        v.update({
+            "base_year": str(p["base_year"]),
+            "trend_line": trend + ".",
+            "median_then": fu(p["median_then"]),
+            "median_now": fu(p["median_now"]),
+            "mover_name": m["name"] if m else "",
+            "mover_then": fu(m["then"]) if m else "",
+            "mover_now": fu(m["now"]) if m else "",
+            "mover_change": change(m["change"]) if m else "",
+        })
+        row = lambda x: {"name": x["name"], "then": f(x["then"]), "now": f(x["now"]),
+                         "change": change(x["change"]), "raw_change": x["change"]}
+        v["min_population"] = n.fmt_count(p.get("list_min_population") or 0)
+        v["_movers"] = [row(x) for x in p["movers"]]
+        v["_risers"] = [row(x) for x in p["risers"]]
+        v["_fallers"] = [row(x) for x in p["fallers"]]
+        v["list_note"] = (f"countries and territories with {n.fmt_count(p['list_min_population'])}+ people"
+                          if p.get("list_min_population") else "countries and territories")
 
     elif fmt == "world_in_one_chart":
-        s = p["shares"]
-        top3 = sum(x["share"] for x in s[:3])
-        v.update({"top1_name": s[0]["name"], "top1_share": n.fmt_share(s[0]["share"]),
-                  "top3_names": n.join_names([x["name"] for x in s[:3]]),
-                  "top3_share": n.fmt_share(top3)})
+        sh = p["shares"]
+        top3 = sum(x["share"] for x in sh[:3])
+        v.update({
+            "top1_name": sh[0]["name"], "top1_share": n.fmt_share(sh[0]["share"]),
+            "top3_names": n.join_names([x["name"] for x in sh[:3]]),
+            "top3_share": n.fmt_share(top3),
+            "top10_share": n.fmt_share(p["top10_share"]),
+            "n_to_half": str(p["n_to_half"]),
+            "n_to_half_label": ("1 country" if p["n_to_half"] == 1
+                                else f"{p['n_to_half']} countries"),
+            "total": fu(p["total"]),
+        })
+        v["_shares"] = [{"name": x["name"], "share": n.fmt_share(x["share"]),
+                         "value": fu(x["value"])} for x in sh]
     return v

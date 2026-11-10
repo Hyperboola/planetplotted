@@ -78,13 +78,17 @@ class Slide:
         for s, color in parts:
             self.ax.text(x, y, s, fontproperties=FONTS[weight], fontsize=size * 0.72,
                          color=color, ha="left", va="top")
-            x += text_width(s + " ", size, weight)
+            x += text_width(s, size, weight) + size * 0.3  # spazio tra i pezzi
 
     def rect(self, x, y, w, h, color, radius=0):
         from matplotlib.patches import FancyBboxPatch
         box = FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={radius}",
                              linewidth=0, facecolor=color)
         self.ax.add_patch(box)
+
+    def dot(self, x, y, r, color):
+        from matplotlib.patches import Circle
+        self.ax.add_patch(Circle((x, y), r, facecolor=color, linewidth=0, zorder=4))
 
     def line(self, x1, y1, x2, y2, color=LINE, width=2):
         self.ax.plot([x1, x2], [y1, y2], color=color, linewidth=width * 0.72)

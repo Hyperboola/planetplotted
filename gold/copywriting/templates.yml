@@ -122,40 +122,41 @@ mapped:
 then_vs_now:
   - title: "{indicator}: {base_year} vs {year}"
     subtitle: "{unit} · how the world changed"
-    closing: "Biggest rise: {riser_name}, {riser_then} → {riser_now}"
+    closing: "{trend_line}"
     caption: |
-      {indicator} from {base_year} to {year}. Biggest rise: {riser_name} ({riser_then} → {riser_now}).
-      Biggest fall: {faller_name} ({faller_then} → {faller_now}).
+      {indicator} from {base_year} to {year}. {trend_line}
+      Biggest change: {mover_name} ({mover_then} → {mover_now}).
       Source: {source_name} ({source_code}).
   - title: "How {indicator_lc} changed since {base_year}"
     subtitle: "{unit} · {base_year} → {year}"
-    closing: "{riser_name}: {riser_then} → {riser_now}"
+    closing: "The middle country: {median_then} → {median_now}"
     caption: |
-      {base_year} vs {year}. {riser_name} rose the most, {faller_name} fell the most.
-      Source: {source_name} ({source_code}).
+      {base_year} vs {year}: the median went from {median_then} to {median_now}.
+      {trend_line} Source: {source_name} ({source_code}).
   - title: "{base_year} → {year}: {indicator_lc}"
     subtitle: "{unit}"
-    closing: "Biggest fall: {faller_name}, {faller_then} → {faller_now}"
+    closing: "Biggest change: {mover_name}, {mover_change}"
     caption: |
       Then vs now: {indicator_lc}, {base_year} vs {year}.
+      Biggest change: {mover_name} ({mover_change}). {trend_line}
       Source: {source_name} ({source_code}).
 
 world_in_one_chart:
   - title: "The world's {indicator_lc} in one chart"
     subtitle: "Share of the total · {year}"
-    closing: "{top3_names}: {top3_share} of the total"
+    closing: "Half of the total comes from just {n_to_half_label}"
     caption: |
-      {top1_name} alone accounts for {top1_share} of the total.
+      {top1_name} alone accounts for {top1_share} of the total, and half of it comes from just {n_to_half_label}.
       Sum of {n_countries} countries and territories with data, {year}. Source: {source_name} ({source_code}).
   - title: "Who holds the world's {indicator_lc}?"
     subtitle: "Share of the total · {year}"
-    closing: "Top 3: {top3_share}"
+    closing: "{top3_names}: {top3_share} of the total"
     caption: |
-      {top3_names} together: {top3_share}.
+      {top3_names} together: {top3_share}. The top 10: {top10_share}.
       {n_countries} countries and territories, {year}. Source: {source_name} ({source_code}).
   - title: "{indicator}: the whole world, one chart"
     subtitle: "Share by country · {year}"
-    closing: "#1: {top1_name}, {top1_share}"
+    closing: "The top 10 hold {top10_share} of the total"
     caption: |
       How the world's {indicator_lc} is split between {n_countries} countries and territories.
-      Source: {source_name} ({source_code}), {year}.
+      #1: {top1_name}, {top1_share}. Source: {source_name} ({source_code}), {year}.
