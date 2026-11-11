@@ -2,7 +2,7 @@
 
 Pipeline dati che ogni giorno scarica indicatori mondiali dalla World Bank,
 li pulisce, decide cosa pubblicare, scrive i testi e crea i post per Instagram
-(caroselli pronti, reel in arrivo). In futuro alimenterà anche un sito con API e area admin.
+(caroselli e reel). In futuro alimenterà anche un sito con API e area admin.
 
 **Regola del progetto: mai inventare nulla.** I dati scaricati non si modificano,
 nel database non si stimano né si arrotondano valori, e nei testi i numeri
@@ -28,7 +28,7 @@ flowchart LR
 | **silver** | `silver/clean.py` | bronze | schema `silver` |
 | **gold** · plan | `gold/plan/schedule.py` | `silver` | `gold.post_queue` (payload) |
 | **gold** · copy | `gold/copywriting/generate.py` | `gold.post_queue` | `gold.post_queue` (copy) |
-| **serving** · render | `serving/render/post.py` | `gold.post_queue` | `data/renders/` (e bucket S3/R2) |
+| **serving** · render | `serving/render/post.py` | `gold.post_queue` | `data/renders/` slide e reel (e bucket S3/R2) |
 
 ## Struttura
 
@@ -44,7 +44,7 @@ gold/              dati pronti all'uso
   plan/              sceglie formato e indicatore per ogni slot e calcola i numeri
   copywriting/       testi con segnaposto, formattazione dei numeri, modelli
 serving/           output pubblicabili
-  render/            slide dei caroselli, mappa Equal Earth, treemap, font e confini
+  render/            slide dei caroselli, reel (video), mappa Equal Earth, treemap
 catalog/           configurazione: indicatori, programmazione, nomi dei paesi
 common/            config, connessione al database, storage, migrazioni
 migrations/        schema del database (silver e gold), un file per modifica
@@ -136,7 +136,8 @@ Font e confini dei paesi sono già nel repository. Per rigenerarli:
 - **Postgres:** `localhost:5432`, database, utente e password `planetplotted`
   (estensione PostgreSQL di VS Code o DBeaver). Tabelle negli schemi `silver` e `gold`.
 
-In Airflow attiva il DAG `planetplotted_daily`: gira ogni giorno alle 4:00 UTC.
+In Airflow attiva il DAG `planetplotted_daily`: gira ogni giorno alle 6:00 UTC (7:00 in Italia)
+e prepara i post del giorno dopo, così c'è un giorno intero per controllarli.
 
 ## Lanciare le tappe a mano
 
@@ -179,6 +180,33 @@ approfondimento, chiusura con fonte). Due slot al giorno, definiti in `catalog/s
 | **Mapped** | mappa del mondo (proiezione Equal Earth) in 5 classi con lo stesso numero di paesi |
 | **Then vs Now** | i 10 cambiamenti più grandi in circa 20 anni, la mediana e quanti paesi sono saliti, scesi o rimasti fermi |
 | **The World in One Chart** | treemap delle quote sul totale, solo per indicatori sommabili |
+| **Globe** | tre slide con il globo visto da tre lati (Americhe, Europa e Africa, Asia e Oceania), con il più alto e il più basso di ogni regione |
+
+Ogni giorno: un reel (slot delle 12:00 UTC) e un carosello (17:00 UTC), definiti in `catalog/schedule.yml`.
+
+### Reel
+
+Ogni giorno lo slot `reel` pubblica un video verticale 1080 × 1920 (18-25 secondi), pensato
+per il video e non come una slide che si muove: grafico a tutto schermo a tinta unita,
+titolo che entra grande e poi si ritira in alto, "telecamera" che segue i dati, anno grande
+nella sua fascia in basso, mai coperto dai dati. I fotogrammi sono disegnati con matplotlib e montati da ffmpeg in MP4 H.264
+con audio muto (la musica si sceglie su Instagram). Usano la **serie storica** (circa 30 anni):
+
+| Formato | Cosa mostra |
+|---|---|
+| **bar_race** | i paesi più alti anno per anno, barre spesse che si sorpassano |
+| **line_race** | 6 paesi come in una gara: curve morbide, la telecamera scorre negli anni e fa zoom |
+| **duel** | una line race a due, con il punto del sorpasso |
+| **scroll_ranking** | la classifica completa come una ruota: "find your country" |
+
+Regole: i numeri scritti sono solo quelli degli anni reali; tra un anno e l'altro barre,
+linee e bolle si muovono in modo fluido (lo dice la nota finale); un paese senza dato in
+un anno non viene stimato, esce dalla gara o la sua linea si interrompe. Le curve tra un anno
+e l'altro sono cubiche monotone: passano per i valori veri senza inventare picchi.
+Anche i 5 formati del carosello hanno un reel animato, di riserva. I formati solo reel hanno,
+al posto del carosello, una copertina.
+
+`serving.render.post --skip-reel` crea solo le immagini, utile mentre si lavora sui caroselli.
 
 ## Regole sui dati
 
@@ -229,7 +257,7 @@ docker compose exec airflow python -m pytest -q
 ```
 
 - **Unitari** (`tests/unit`): formattazione dei numeri, regole dei formati, memoria del plan,
-  pulizia del silver, modelli di testo, treemap ed etichette.
+  pulizia del silver, modelli di testo, treemap ed etichette, scene del reel e video MP4.
 - **Integrazione** (`tests/integration`): migrazioni, silver, plan, copy e render di una settimana
   intera su un Postgres vero, con dati finti. Usa `TEST_PG_DSN`, un database dedicato che viene
   svuotato: non va mai puntato al database di sviluppo. Senza `TEST_PG_DSN` viene saltato.
@@ -253,9 +281,8 @@ e si cancella la cartella `data/renders`. Attenzione: svuotare la tabella azzera
 
 ## Prossimi passi
 
-1. Reel (video MP4) dagli stessi dati dei caroselli.
-2. Cloud con Terraform: Postgres serverless, object storage, Airflow su macchina virtuale,
+1. Cloud con Terraform: Postgres serverless, object storage, Airflow su macchina virtuale,
    deploy dell'immagine pubblicata dalla CI, avvisi in caso di errore.
-3. API (FastAPI), sito (Next.js) con grafici e area admin.
-4. Go-live: pagina Instagram e sito.
-5. Indicatori pro capite affiancati ai totali (es. CO2 per persona e totale nazionale).
+2. API (FastAPI), sito (Next.js) con grafici e area admin.
+3. Go-live: pagina Instagram e sito.
+4. Indicatori pro capite affiancati ai totali (es. CO2 per persona e totale nazionale).

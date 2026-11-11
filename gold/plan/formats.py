@@ -7,7 +7,8 @@ si usano solo dati presenti nel database.
 import statistics
 from collections import defaultdict
 
-FORMATS = {"ranked", "mapped", "then_vs_now", "world_in_one_chart", "the_gap"}
+# Formati del carosello (e del loro reel)
+CAROUSEL_FORMATS = {"ranked", "mapped", "globe", "then_vs_now", "world_in_one_chart", "the_gap"}
 
 
 def reference_year(rows, current_year, max_age, min_share=0.6, min_countries=50,

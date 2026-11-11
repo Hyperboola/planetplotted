@@ -160,3 +160,78 @@ world_in_one_chart:
     caption: |
       How the world's {indicator_lc} is split between {n_countries} countries and territories.
       #1: {top1_name}, {top1_share}. Source: {source_name} ({source_code}), {year}.
+
+# --- Formati solo reel (serie storiche) -----------------------------------
+
+bar_race:
+  - title: "{indicator}: the race since {start_year}"
+    subtitle: "Top 10 countries · {unit} · {start_year}–{year}"
+    closing: "Highest in {year}: {leader_end}, {leader_end_value}"
+    caption: |
+      {start_year} to {year}: who has had the highest {indicator_lc}? {n_leaders} different countries held the #1 spot.
+      Highest in {year}: {leader_end} ({leader_end_value}). Source: {source_name} ({source_code}).
+  - title: "Who has the highest {indicator_lc}? {start_year}–{year}"
+    subtitle: "Top 10 · {unit}"
+    closing: "In {start_year}: {leader_start}. In {year}: {leader_end}"
+    caption: |
+      The top 10 in {indicator_lc}, year by year since {start_year}. Watch until the end.
+      Source: {source_name} ({source_code}).
+
+line_race:
+  - title: "{indicator}: {start_year} → {year}"
+    subtitle: "{unit} · {names}"
+    closing: "Highest in {year}: {leader_end}, {leader_end_value}"
+    caption: |
+      How {names} compare on {indicator_lc} since {start_year}.
+      Source: {source_name} ({source_code}).
+  - title: "The {indicator_lc} race since {start_year}"
+    subtitle: "{unit} · the highest today, and how they got there"
+    closing: "{leader_end} ends on top: {leader_end_value}"
+    caption: |
+      {start_year} to {year}: {indicator_lc} in {names}.
+      Source: {source_name} ({source_code}).
+
+
+
+duel:
+  - title: "{a_name} vs {b_name}: {indicator_lc}"
+    subtitle: "{unit} · {start_year}–{year} · who's ahead?"
+    closing: "{duel_story}"
+    caption: |
+      {duel_story}. In {year}: {ahead_name} {ahead_value}, {behind_name} {behind_value}.
+      Source: {source_name} ({source_code}).
+  - title: "{indicator}: {a_name} or {b_name}?"
+    subtitle: "{start_year}–{year} · guess before the end"
+    closing: "{duel_story}"
+    caption: |
+      Did you guess right? {duel_story}.
+      {indicator}, {start_year}–{year}. Source: {source_name} ({source_code}).
+
+scroll_ranking:
+  - title: "Every country ranked: {indicator_lc}"
+    subtitle: "{n_countries} countries and territories · {year} · find yours"
+    closing: "Where is your country? Tell us in the comments"
+    caption: |
+      All {n_countries} countries and territories, from {top1_name} ({top1_value}) to {last_name} ({last_value}).
+      Where does yours rank? Source: {source_name} ({source_code}), {year}.
+  - title: "{indicator}: the full ranking"
+    subtitle: "{year} · pause to find your country"
+    closing: "#1: {top1_name}, {top1_value}"
+    caption: |
+      The full list, {n_countries} countries and territories. Find yours and comment.
+      Source: {source_name} ({source_code}), {year}.
+
+globe:
+  - title: "{indicator}, around the globe"
+    subtitle: "{unit} · latest data · three views of the world"
+    closing: "Highest of all: {top3_names}"
+    caption: |
+      {indicator} seen from space: the Americas, Europe and Africa, Asia and Oceania.
+      Highest: {top1_name} ({top1_value}). Latest available data for each country, {year}.
+      Source: {source_name} ({source_code}).
+  - title: "The world of {indicator_lc}, one side at a time"
+    subtitle: "{unit} · latest data for each country"
+    closing: "Highest values: {top3_names}"
+    caption: |
+      Swipe around the globe: {indicator_lc} in every region. Save it for later.
+      Source: {source_name} ({source_code}), {year}.

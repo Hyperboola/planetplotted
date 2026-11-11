@@ -104,6 +104,13 @@ class Slide:
         self.text(self.w - MARGIN, y, BRAND, size=26,
                   weight="bold", ha="right")
 
+    def rgba(self) -> bytes:
+        """I pixel della slide (RGBA), senza passare da un file: per i video."""
+        self.fig.canvas.draw()
+        data = bytes(self.fig.canvas.buffer_rgba())
+        plt.close(self.fig)
+        return data
+
     def save(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
         self.fig.savefig(path, dpi=100, facecolor=self.fig.get_facecolor())

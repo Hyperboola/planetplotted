@@ -8,14 +8,18 @@ no_repeat_days: 7   # un indicatore non torna prima di 7 giorni
 no_repeat_pair_days: 90   # la stessa coppia indicatore + formato non torna prima di 90 giorni
 gap_min_population: 1000000   # The Gap e liste delle mappe: solo paesi con almeno 1M di abitanti
 
-# [formato, tema] per ogni slot: 14 post a settimana, 14 temi diversi.
-# "world_in_one_chart" solo su temi con indicatori additive (trade, food,
-# people, economy, technology, environment).
+# [formato, tema] per ogni slot.
+# Slot reel: formati pensati per il video, con la serie storica
+#   bar_race, line_race, duel, scroll_ranking
+#   (anche i formati del carosello hanno un reel animato, di riserva).
+# Slot carosello: ranked, the_gap, mapped, globe, then_vs_now, world_in_one_chart
+#   ("world_in_one_chart" solo su temi con indicatori additive).
+# Il tema è una preferenza: se non ci sono indicatori adatti, il plan ne sceglie un altro.
 week:
-  mon: [[ranked, economy],        [mapped, health]]
-  tue: [[then_vs_now, technology], [the_gap, work]]
-  wed: [[ranked, people],         [world_in_one_chart, trade]]
-  thu: [[then_vs_now, energy],    [mapped, education]]
-  fri: [[ranked, gender],         [the_gap, environment]]
-  sat: [[then_vs_now, cities],    [world_in_one_chart, food]]
-  sun: [[ranked, health],         [mapped, finance]]
+  mon: [[bar_race, economy],       [ranked, health]]
+  tue: [[line_race, technology],   [the_gap, work]]
+  wed: [[scroll_ranking, people],  [world_in_one_chart, trade]]
+  thu: [[duel, energy],            [globe, education]]
+  fri: [[line_race, gender],       [then_vs_now, environment]]
+  sat: [[duel, economy],           [the_gap, food]]
+  sun: [[bar_race, people],        [mapped, finance]]

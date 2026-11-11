@@ -13,6 +13,8 @@ import os
 import pytest
 
 from common import catalog, config, storage
+from gold.plan.formats import CAROUSEL_FORMATS
+from gold.plan.timeseries import REEL_FORMATS
 
 pytestmark = pytest.mark.integration
 TEST_DSN = os.getenv("TEST_PG_DSN")
@@ -72,7 +74,7 @@ def test_full_pipeline(pipeline_env):
         day = start + dt.timedelta(days=i)
         plan_day(day)
         generate_day(day)
-        render(day=day)
+        render(day=day, skip_reel=True)  # i video li prova test_reel, più veloce
 
     conn = db.connect()
     with conn, conn.cursor() as cur:
@@ -84,9 +86,11 @@ def test_full_pipeline(pipeline_env):
 
     assert aggregates == 0
     assert len(posts) == 14
-    assert {f for f, _, _ in posts} == {"ranked", "the_gap", "mapped", "then_vs_now",
-                                        "world_in_one_chart"}
-    for _fmt, status, files in posts:
+    formats_used = {f for f, _, _ in posts}
+    assert CAROUSEL_FORMATS <= formats_used          # tutti i formati del carosello
+    assert REEL_FORMATS <= formats_used              # e tutti quelli dei reel
+    for fmt, status, files in posts:
         assert status == "rendered"
-        assert len(files) == 4
+        # Carosello: 4 slide. Formati solo reel: una copertina (il video è saltato qui)
+        assert len(files) == (1 if fmt in REEL_FORMATS else 4)
         assert all((pipeline_env / "renders" / f).exists() for f in files)

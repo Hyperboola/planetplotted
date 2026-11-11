@@ -42,7 +42,7 @@ def source_line(v) -> str:
     return f"Source: {v['source_name']} · {v['year']}"
 
 
-def cover(tag: str, t: dict, v: dict, preview=None) -> Slide:
+def cover(tag: str, t: dict, v: dict, preview=None, cta: str = "Swipe →") -> Slide:
     """Copertina. preview(slide, y) disegna un'anteprima del contenuto
     sotto il titolo, per incuriosire chi scorre il feed."""
     s = Slide()
@@ -55,7 +55,7 @@ def cover(tag: str, t: dict, v: dict, preview=None) -> Slide:
         preview(s, y + 70)
     s.image(LOGO_SMALL, MARGIN, CAROUSEL[1] - MARGIN - 64, 64, 64)
     s.text(MARGIN + 82, CAROUSEL[1] - MARGIN - 48, BRAND, size=30, weight="bold")
-    s.text(CAROUSEL[0] - MARGIN, CAROUSEL[1] - MARGIN - 50, "Swipe →", size=34,
+    s.text(CAROUSEL[0] - MARGIN, CAROUSEL[1] - MARGIN - 50, cta, size=34,
            weight="semibold", color=ACCENT, ha="right")
     return s
 
@@ -373,9 +373,10 @@ def _fit_label(name, box_w, box_h, start):
     return None
 
 
-def draw_treemap(s: Slide, items, x, y, w, h, labels=True):
+def draw_treemap(s: Slide, items, x, y, w, h, labels=True, visible=None):
     """items: lista di (nome, quota, testo quota, codice), in ordine di classifica.
-    Il resto del mondo ha un nome che inizia con "Rest"."""
+    Il resto del mondo ha un nome che inizia con "Rest".
+    visible: quanti riquadri mostrare, dal più grande (per l'animazione del reel)."""
     from serving.render.treemap import squarify
 
     gap, pad = 4, 14
@@ -383,7 +384,9 @@ def draw_treemap(s: Slide, items, x, y, w, h, labels=True):
     # la più grande); il colore invece segue la posizione in classifica.
     ranked_items = sorted(enumerate(items), key=lambda e: e[1][1], reverse=True)
     rects = squarify([it[1] for _, it in ranked_items], x, y, w, h)
-    for (i, (name, _share, label, code)), (rx, ry, rw, rh) in zip(ranked_items, rects):
+    for n, ((i, (name, _share, label, code)), (rx, ry, rw, rh)) in enumerate(zip(ranked_items, rects)):
+        if visible is not None and n >= visible:
+            break
         rest = name.startswith("Rest")
         fill = ACCENT if i == 0 else (LINE if rest else TREE_COLORS[i % 3])
         s.rect(rx + gap / 2, ry + gap / 2, max(rw - gap, 1), max(rh - gap, 1), fill, 6)
@@ -461,3 +464,71 @@ def world_in_one_chart(t, v, p):
 
 BUILDERS = {"ranked": ranked, "the_gap": the_gap, "mapped": mapped,
             "then_vs_now": then_vs_now, "world_in_one_chart": world_in_one_chart}
+
+
+def _reel_cover(tag):
+    """I formati solo reel non hanno un carosello: una copertina basta
+    (anteprima del video sul profilo e immagine per le altre piattaforme)."""
+    return lambda t, v, p: [cover(tag, t, v, cta="Watch →")]
+
+
+BUILDERS.update({
+    "bar_race": _reel_cover("The Race"),
+    "line_race": _reel_cover("The Race"),
+    "duel": _reel_cover("The Duel"),
+    "scroll_ranking": _reel_cover("Find Your Country"),
+})
+
+
+# --- Globe: tre facce del mondo ----------------------------------------------
+
+GLOBE_VIEWS = [
+    ("The Americas", -78, 10, {"Latin America & Caribbean", "North America"}),
+    ("Europe and Africa", 16, 18, {"Europe & Central Asia", "Sub-Saharan Africa",
+                                   "Middle East & North Africa",
+                                   "Middle East, North Africa, Afghanistan & Pakistan"}),
+    ("Asia and Oceania", 108, 12, {"East Asia & Pacific", "South Asia"}),
+]
+
+
+def globe(t, v, p):
+    """Il mondo in tre slide, una per faccia del globo, con i colori della mappa.
+    Sotto ogni globo, il più alto e il più basso della regione (paesi da 1M+)."""
+    from serving.render import globe as earth
+
+    unit, edges = p["unit"], p["bins"]
+    fmt = lambda x: n_fmt(x, unit)
+    colors = {r["iso3"]: MAP_SCALE[sum(r["value"] >= e for e in edges)] for r in p["values"]}
+    chips = [f"< {fmt(edges[0])}"] + [f"{fmt(e)}+" for e in edges]
+    slides = []
+    for k, (region, lon, lat, regions) in enumerate(GLOBE_VIEWS):
+        s = Slide()
+        y = s.text(MARGIN, MARGIN, f"{v['indicator']} · {unit} · {v['year']}", size=28,
+                   weight="semibold", color=MUTED, max_width=WIDTH)
+        if k == 0:     # la prima faccia fa anche da copertina
+            y = s.text(MARGIN, y + 20, t["title"], size=60, weight="bold", max_width=WIDTH,
+                       line_height=1.05)
+        y = s.text(MARGIN, y + 16, region, size=44 if k == 0 else 60, weight="bold",
+                   color=ACCENT if k == 0 else FG)
+        r = min(330, (1040 - y) / 2)
+        cy = y + 30 + r
+        earth.draw(s, CAROUSEL[0] / 2, cy, r, lon, lat, colors, NO_DATA)
+        # Legenda compatta: i cinque colori con il valore da cui parte ogni fascia
+        ly, chip_w = cy + r + 34, WIDTH / 5
+        for j, c in enumerate(MAP_SCALE):
+            s.rect(MARGIN + j * chip_w + 4, ly, chip_w - 8, 14, c, 7)
+            s.text(MARGIN + j * chip_w + 4, ly + 22, chips[j], size=22, color=MUTED)
+        here = sorted((r_ for r_ in p["values"] if r_.get("region") in regions
+                       and r_.get("in_list", True)), key=lambda r_: -r_["value"])
+        if here:
+            hi, lo = here[0], here[-1]
+            line = (f"Highest here: {hi['name']} {n_with_unit(fmt(hi['value']), unit)} · "
+                    f"Lowest: {lo['name']} {n_with_unit(fmt(lo['value']), unit)}")
+            s.text(MARGIN, ly + 66, line, size=28, weight="semibold", color=FG,
+                   max_width=WIDTH, line_height=1.25)
+        s.footer(source_line(v) + (" · Swipe →" if k < 2 else ""))
+        slides.append(s)
+    return slides + [closing(v)]
+
+
+BUILDERS["globe"] = globe

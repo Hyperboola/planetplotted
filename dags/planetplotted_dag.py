@@ -2,6 +2,10 @@
 
 migrazioni -> bronze (extract) -> silver (pulizia) -> gold (plan e copy) -> serving (render)
 
+Gira ogni mattina e prepara i post del GIORNO DOPO: c'è un giorno intero per
+controllarli e approvarli, e se un giro fallisce c'è tempo per rilanciarlo.
+Tutti gli orari sono in UTC (non cambiano con l'ora legale).
+
 Ogni task lancia uno script indipendente: lo stesso comando funziona
 anche a mano dal terminale, senza Airflow.
 """
@@ -12,13 +16,13 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 
 PROJECT = "cd /opt/planetplotted && python -m"
-RUN_DATE = "{{ ds }}"                         # giorno dell'estrazione
-POST_DATE = "{{ data_interval_end | ds }}"    # giorno dei post da preparare
+RUN_DATE = "{{ ds }}"                                          # giorno dell'estrazione
+POST_DATE = "{{ macros.ds_add(data_interval_end | ds, 1) }}"   # i post di domani
 
 with DAG(
     dag_id="planetplotted_daily",
-    description="World Bank -> bronze -> silver -> gold -> serving",
-    schedule="0 4 * * *",          # ogni giorno alle 4:00 UTC
+    description="World Bank -> bronze -> silver -> gold -> serving (post di domani)",
+    schedule="0 6 * * *",          # 6:00 UTC = 7:00 in Italia (8:00 con l'ora legale)
     start_date=dt.datetime(2026, 11, 1),
     catchup=False,
     max_active_runs=1,

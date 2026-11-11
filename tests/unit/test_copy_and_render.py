@@ -19,6 +19,9 @@ PAYLOADS = {
                 "excluded_zero": 0, "min_population": 1_000_000},
     "mapped": {**BASE, "bins": [1, 2, 3, 4], "list_min_population": 1_000_000,
                "values": [{"iso3": "A", "name": "A", "value": 5.0, "in_list": True}]},
+    "globe": {**BASE, "bins": [1, 2, 3, 4], "list_min_population": 1_000_000,
+              "values": [{"iso3": "USA", "name": "United States", "value": 5.0, "in_list": True,
+                          "region": "North America"}]},
     "then_vs_now": {**BASE, "base_year": 2004, "rose": 140, "fell": 5, "unchanged": 5,
                     "median_then": 20.0, "median_now": 80.0, "list_min_population": 1_000_000,
                     "movers": [{"name": "A", "then": 1.0, "now": 90.0, "change": 89.0}],
@@ -53,3 +56,13 @@ def test_labels_fit_or_are_skipped():
 def test_bars_use_100_only_for_shares():
     assert bar_max("% of population", [99, 8]) == 100.0
     assert bar_max("% per year", [4.7, -4.7]) == 4.7
+
+
+def test_globe_carousel_shows_three_sides_of_the_world():
+    from serving.render import carousel
+
+    templates = yaml.safe_load(open(TEMPLATES_FILE, encoding="utf-8"))
+    p = PAYLOADS["globe"]
+    v = values.build("globe", p)
+    slides = carousel.globe(resolve(make_copy(templates, "globe", p, 0, "education"), v), v, p)
+    assert len(slides) == 4                       # tre emisferi e la chiusura

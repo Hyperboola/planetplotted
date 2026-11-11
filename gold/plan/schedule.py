@@ -13,7 +13,7 @@ import logging
 import yaml
 
 from common import catalog, config, db
-from gold.plan import formats
+from gold.plan import formats, timeseries
 
 log = logging.getLogger("gold.plan")
 SCHEDULE_FILE = config.ROOT / "catalog" / "schedule.yml"
@@ -29,7 +29,7 @@ def load_schedule() -> dict:
                 f"schedule.yml: '{day}' ha {len(s['week'][day])} post "
                 f"ma ci sono {len(s['slots'])} slot. Devono coincidere.")
         for fmt, _topic in s["week"][day]:
-            if fmt not in formats.FORMATS:
+            if fmt not in formats.CAROUSEL_FORMATS | timeseries.REEL_FORMATS:
                 raise ValueError(f"schedule.yml: formato sconosciuto '{fmt}'")
     return s
 
@@ -61,6 +61,7 @@ def choose_indicator(items, fmt, topic, last_used, exclude, day, no_repeat_days,
             return False
         if fmt == "the_gap" and i.get("additive", False):
             return False
+
         last = last_used.get(i["id"])
         if last is not None and (day - last).days < no_repeat_days:
             return False
@@ -106,6 +107,11 @@ def fetch_pair_last_used(cur, day):
     return {(i, f): d for i, f, d in cur.fetchall()}
 
 
+def fetch_regions(cur) -> dict:
+    cur.execute("SELECT iso3, region FROM silver.countries")
+    return dict(cur.fetchall())
+
+
 def fetch_population(cur) -> dict:
     """Ultima popolazione disponibile per ogni paese."""
     cur.execute("""
@@ -115,8 +121,23 @@ def fetch_population(cur) -> dict:
     return dict(cur.fetchall())
 
 
-def build_payload(item, fmt, rows, day, population=None, min_population=0):
-    if fmt == "mapped":
+def build_payload(item, fmt, rows, day, population=None, min_population=0, cur=None):
+    if fmt in timeseries.REEL_FORMATS:
+        year = formats.reference_year(rows, day.year, item["max_age"])
+        if year is None:
+            return None
+        if fmt == "scroll_ranking":
+            payload = timeseries.scroll_ranking(rows, year)
+        else:
+            payload = getattr(timeseries, fmt)(rows, year, population, min_population)
+    elif fmt == "globe":
+        # Come la mappa (ultimo dato per paese), più la regione per ogni emisfero
+        payload = formats.mapped(rows, day.year, item["max_age"], population, min_population)
+        if payload:
+            regions = fetch_regions(cur)
+            for r in payload["values"]:
+                r["region"] = regions.get(r["iso3"])
+    elif fmt == "mapped":
         # Mappa: ultimo dato per paese, non un solo anno per tutti
         payload = formats.mapped(rows, day.year, item["max_age"], population, min_population)
     else:
@@ -177,7 +198,7 @@ def plan_day(day: dt.date, replace: bool = False) -> int:
                     if item is None:
                         break
                     payload = build_payload(item, fmt, fetch_rows(cur, item["id"]), day,
-                                            population, min_pop)
+                                            population, min_pop, cur)
                     if payload:
                         break
                     tried.add(item["id"])

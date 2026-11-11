@@ -90,7 +90,7 @@ def build(fmt: str, p: dict) -> dict:
             notes.append("zero values excluded")
         v["scope_note"] = ", ".join(notes) or f"All {p['n_countries']} countries and territories with data"
 
-    elif fmt == "mapped":
+    elif fmt in ("mapped", "globe"):
         # La mappa usa l'ultimo dato di ogni paese: l'anno diventa una finestra
         if p.get("year_from") and p["year_from"] != p["year"]:
             v["year"] = f"{p['year_from']}–{p['year']}"
@@ -162,4 +162,34 @@ def build(fmt: str, p: dict) -> dict:
         })
         v["_shares"] = [{"name": x["name"], "share": n.fmt_share(x["share"]),
                          "value": fu(x["value"])} for x in sh]
+    elif fmt == "bar_race":
+        frames = [fr for fr in p["frames"] if fr["top"]]
+        first, last = frames[0]["top"][0], frames[-1]["top"][0]
+        v.update({"start_year": str(p["start_year"]), "leader_start": first["name"],
+                  "leader_end": last["name"], "leader_end_value": fu(last["value"]),
+                  "n_leaders": str(p["n_leaders"])})
+
+    elif fmt == "line_race":
+        leader = max(p["series"], key=lambda x: x["values"][-1] or 0)
+        v.update({"start_year": str(p["start_year"]), "leader_end": leader["name"],
+                  "leader_end_value": fu(leader["values"][-1]),
+                  "names": n.join_names([x["name"] for x in p["series"]])})
+
+    elif fmt == "duel":
+        a, b = p["a"], p["b"]
+        ahead, behind = (a, b) if a["values"][-1] >= b["values"][-1] else (b, a)
+        if p["overtake_year"]:
+            story = f"{ahead['name']} overtook {behind['name']} in {p['overtake_year']}"
+        else:
+            story = f"{ahead['name']} stayed ahead of {behind['name']} the whole time"
+        v.update({"start_year": str(p["start_year"]), "a_name": a["name"], "b_name": b["name"],
+                  "ahead_name": ahead["name"], "ahead_value": fu(ahead["values"][-1]),
+                  "behind_name": behind["name"], "behind_value": fu(behind["values"][-1]),
+                  "duel_story": story})
+
+    elif fmt == "scroll_ranking":
+        rows = p["rows"]
+        v.update({"top1_name": rows[0]["name"], "top1_value": fu(rows[0]["value"]),
+                  "last_name": rows[-1]["name"], "last_value": fu(rows[-1]["value"])})
+
     return v
