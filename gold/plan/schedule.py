@@ -107,6 +107,23 @@ def fetch_pair_last_used(cur, day):
     return {(i, f): d for i, f, d in cur.fetchall()}
 
 
+RIVALRIES_FILE = config.ROOT / "catalog" / "rivalries.yml"
+
+
+def load_rivalries() -> dict:
+    with open(RIVALRIES_FILE, encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def fetch_recent_duels(cur, day, pause_days) -> set:
+    """Le coppie usate nei duelli degli ultimi pause_days giorni."""
+    cur.execute("""
+        SELECT payload->'a'->>'iso3', payload->'b'->>'iso3' FROM gold.post_queue
+        WHERE format = 'duel' AND slot_at::date < %s AND slot_at::date >= %s
+    """, (day, day - dt.timedelta(days=pause_days)))
+    return {frozenset(pair) for pair in cur.fetchall()}
+
+
 def fetch_regions(cur) -> dict:
     cur.execute("SELECT iso3, region FROM silver.countries")
     return dict(cur.fetchall())
@@ -128,6 +145,10 @@ def build_payload(item, fmt, rows, day, population=None, min_population=0, cur=N
             return None
         if fmt == "scroll_ranking":
             payload = timeseries.scroll_ranking(rows, year)
+        elif fmt == "duel":
+            riv = load_rivalries()
+            payload = timeseries.duel(rows, year, riv["rivalries"],
+                                      fetch_recent_duels(cur, day, riv["duel_pause_days"]))
         else:
             payload = getattr(timeseries, fmt)(rows, year, population, min_population)
     elif fmt == "globe":

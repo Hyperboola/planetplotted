@@ -1,5 +1,7 @@
 # Planet Plotted
 
+![CI](https://github.com/Hyperboola/planetplotted/actions/workflows/ci.yml/badge.svg)
+
 Pipeline dati che ogni giorno scarica indicatori mondiali dalla World Bank,
 li pulisce, decide cosa pubblicare, scrive i testi e crea i post per Instagram
 (caroselli e reel). In futuro alimenterà anche un sito con API e area admin.
@@ -42,9 +44,10 @@ silver/            pulizia e qualità
   export_names.py    genera catalog/country_names.yml con tutti i paesi
 gold/              dati pronti all'uso
   plan/              sceglie formato e indicatore per ogni slot e calcola i numeri
+                     (formats.py: caroselli; timeseries.py: reel sulla serie storica)
   copywriting/       testi con segnaposto, formattazione dei numeri, modelli
 serving/           output pubblicabili
-  render/            slide dei caroselli, reel (video), mappa Equal Earth, treemap
+  render/            slide dei caroselli, reel (video), mappa Equal Earth, globo, treemap
 catalog/           configurazione: indicatori, programmazione, nomi dei paesi
 common/            config, connessione al database, storage, migrazioni
 migrations/        schema del database (silver e gold), un file per modifica
@@ -94,7 +97,7 @@ erDiagram
     GOLD_POST_QUEUE {
         bigint id PK
         timestamptz slot_at UK "quando pubblicare"
-        text format "ranked, the_gap, mapped, then_vs_now, world_in_one_chart"
+        text format "ranked, the_gap, mapped, globe, then_vs_now, world_in_one_chart, bar_race, line_race, duel, scroll_ranking"
         text media "reel o carousel"
         text indicator_id FK
         jsonb payload "numeri esatti del post"
@@ -163,6 +166,8 @@ python -m serving.render.post --date 2026-11-09
   sommabili; `below_half_phrase` per la frase "In X of N countries…".
 - **`catalog/schedule.yml`:** slot giornalieri (orari UTC, reel o carosello), formato e tema
   per ogni giorno, memoria dei post e soglia di popolazione per le liste.
+- **`catalog/rivalries.yml`:** le coppie di paesi per i duelli, in ordine di priorità,
+  e la pausa prima di riusare la stessa coppia.
 - **`catalog/country_names.yml`:** il nome da mostrare per ogni paese
   (`python -m silver.clean` per caricarli).
 - **`gold/copywriting/templates.yml`:** i modelli dei testi, con soli `{segnaposto}`
@@ -170,8 +175,24 @@ python -m serving.render.post --date 2026-11-09
 
 ## I formati
 
-Ogni post esce come carosello di 4 slide (copertina con anteprima, contenuto,
-approfondimento, chiusura con fonte). Due slot al giorno, definiti in `catalog/schedule.yml`.
+Ogni giorno escono due post, definiti in `catalog/schedule.yml`: un **reel** alle 12:00 UTC
+e un **carosello** alle 17:00 UTC (13:00 e 18:00 in Italia d'inverno).
+
+| Giorno | Reel (12:00 UTC) | Carosello (17:00 UTC) |
+|---|---|---|
+| Lun | bar_race · economy | ranked · health |
+| Mar | line_race · technology | the_gap · work |
+| Mer | scroll_ranking · people | world_in_one_chart · trade |
+| Gio | duel · energy | globe · education |
+| Ven | line_race · gender | then_vs_now · environment |
+| Sab | duel · economy | the_gap · food |
+| Dom | bar_race · people | mapped · finance |
+
+Il tema è una preferenza: se non ci sono indicatori adatti, il plan ne sceglie un altro.
+
+### Caroselli
+
+Carosello di 4 slide: copertina con anteprima, contenuto, approfondimento, chiusura con fonte.
 
 | Formato | Cosa mostra |
 |---|---|
@@ -180,13 +201,11 @@ approfondimento, chiusura con fonte). Due slot al giorno, definiti in `catalog/s
 | **Mapped** | mappa del mondo (proiezione Equal Earth) in 5 classi con lo stesso numero di paesi |
 | **Then vs Now** | i 10 cambiamenti più grandi in circa 20 anni, la mediana e quanti paesi sono saliti, scesi o rimasti fermi |
 | **The World in One Chart** | treemap delle quote sul totale, solo per indicatori sommabili |
-| **Globe** | tre slide con il globo visto da tre lati (Americhe, Europa e Africa, Asia e Oceania), con il più alto e il più basso di ogni regione |
-
-Ogni giorno: un reel (slot delle 12:00 UTC) e un carosello (17:00 UTC), definiti in `catalog/schedule.yml`.
+| **Globe** | tre slide con il globo visto da tre lati (Americhe, Europa e Africa, Asia e Oceania), con il più alto e il più basso di ogni regione; ultimo dato per paese, come Mapped |
 
 ### Reel
 
-Ogni giorno lo slot `reel` pubblica un video verticale 1080 × 1920 (18-25 secondi), pensato
+Ogni giorno lo slot `reel` pubblica un video verticale 1080 × 1920 (18-30 secondi), pensato
 per il video e non come una slide che si muove: grafico a tutto schermo a tinta unita,
 titolo che entra grande e poi si ritira in alto, "telecamera" che segue i dati, anno grande
 nella sua fascia in basso, mai coperto dai dati. I fotogrammi sono disegnati con matplotlib e montati da ffmpeg in MP4 H.264
@@ -199,12 +218,27 @@ con audio muto (la musica si sceglie su Instagram). Usano la **serie storica** (
 | **duel** | una line race a due, con il punto del sorpasso |
 | **scroll_ranking** | la classifica completa come una ruota: "find your country" |
 
-Regole: i numeri scritti sono solo quelli degli anni reali; tra un anno e l'altro barre,
-linee e bolle si muovono in modo fluido (lo dice la nota finale); un paese senza dato in
-un anno non viene stimato, esce dalla gara o la sua linea si interrompe. Le curve tra un anno
-e l'altro sono cubiche monotone: passano per i valori veri senza inventare picchi.
-Anche i 5 formati del carosello hanno un reel animato, di riserva. I formati solo reel hanno,
-al posto del carosello, una copertina.
+Come vengono scelti i paesi:
+- **bar_race:** i più alti di ogni anno. Se in media più di 3,5 paesi cambiano posizione
+  nella top 8 da un anno all'altro (tassi di crescita, inflazione…), l'indicatore non viene
+  usato: la gara sarebbe illeggibile. Per gli altri, la velocità si adatta ai sorpassi
+  (da 0,5 a 0,95 secondi per anno).
+- **line_race:** i 6 più alti nell'ultimo anno, con il dato in almeno l'80% degli anni.
+- **duel:** una rivalità tra grandi nazioni da `catalog/rivalries.yml` (Stati Uniti e Cina,
+  Stati Uniti e Russia, Cina e India…), perché sono i confronti che la gente riconosce.
+  Tra le coppie con dati quasi completi si preferisce quella con il sorpasso più recente,
+  altrimenti vale l'ordine della lista; una coppia già usata negli ultimi 21 giorni viene
+  saltata. Un pareggio non è un sorpasso.
+- **scroll_ranking:** tutti i paesi, anche i più piccoli.
+
+Gare e linee usano solo paesi con almeno 1 milione di abitanti.
+
+Regole: i numeri scritti sono solo quelli degli anni reali; tra un anno e l'altro barre e
+linee si muovono in modo fluido (lo dice la nota finale); un paese senza dato in un anno
+non viene stimato, esce dalla gara o la sua linea si interrompe. Le curve tra un anno e
+l'altro sono cubiche monotone: passano per i valori veri senza inventare picchi.
+Anche i formati del carosello (tranne Globe) hanno un reel animato, di riserva.
+I formati solo reel hanno, al posto del carosello, una copertina.
 
 `serving.render.post --skip-reel` crea solo le immagini, utile mentre si lavora sui caroselli.
 
@@ -286,3 +320,5 @@ e si cancella la cartella `data/renders`. Attenzione: svuotare la tabella azzera
 2. API (FastAPI), sito (Next.js) con grafici e area admin.
 3. Go-live: pagina Instagram e sito.
 4. Indicatori pro capite affiancati ai totali (es. CO2 per persona e totale nazionale).
+5. Un nuovo reel interattivo per il venerdì (per ora c'è una line race): "Higher or lower",
+   "Guess the country" o "Country spotlight".

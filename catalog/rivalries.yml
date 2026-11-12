@@ -1,0 +1,23 @@
+# Coppie per il reel "duel": le grandi nazioni, i confronti che la gente riconosce.
+# In ordine di priorità. Codici iso3. Il plan sceglie la prima coppia che:
+#   - ha il dato in quasi tutti gli anni per entrambi i paesi;
+#   - non è già stata usata in un duello negli ultimi duel_pause_days giorni;
+# preferendo, tra queste, una coppia che si è sorpassata (la storia più forte).
+duel_pause_days: 21
+rivalries:
+  - [USA, CHN]   # Stati Uniti e Cina
+  - [USA, RUS]   # Stati Uniti e Russia
+  - [CHN, IND]   # Cina e India
+  - [USA, IND]   # Stati Uniti e India
+  - [CHN, JPN]   # Cina e Giappone
+  - [DEU, JPN]   # Germania e Giappone
+  - [GBR, FRA]   # Regno Unito e Francia
+  - [DEU, FRA]   # Germania e Francia
+  - [ITA, ESP]   # Italia e Spagna
+  - [JPN, KOR]   # Giappone e Corea del Sud
+  - [IND, PAK]   # India e Pakistan
+  - [BRA, MEX]   # Brasile e Messico
+  - [BRA, ARG]   # Brasile e Argentina
+  - [USA, CAN]   # Stati Uniti e Canada
+  - [RUS, CHN]   # Russia e Cina
+  - [AUS, NZL]   # Australia e Nuova Zelanda

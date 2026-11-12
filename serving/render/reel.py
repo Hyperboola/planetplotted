@@ -19,7 +19,7 @@ from serving.render.base import ACCENT, BG, BRAND, FG, HANDLE, LINE, MARGIN, MUT
 FPS = 30
 W, H = REEL
 WIDTH = W - 2 * MARGIN
-TOP, BOTTOM = 240, H - 380   # fuori da qui ci sono i pulsanti di Instagram
+TOP = 240                     # sopra ci sono il nome dell'account e i pulsanti di Instagram
 LOGO = ROOT / "brand" / "assets" / "mark_dark-bg.png"
 
 
@@ -50,14 +50,6 @@ def end_card(s: Slide, v, alpha, note=None):
 
 # Nota per le animazioni che passano in modo fluido da un anno all'altro
 BETWEEN_YEARS = "Animated between annual values. Countries without data that year are left out."
-# Colori stabili per paese (le barre e le linee non cambiano colore durante la gara)
-PALETTE = ["#E9EEF3", "#7FA7D9", "#F2A091", "#5B8FD1", "#CBB2BA", "#9CC5A1", "#E8C170",
-           "#B39DDB", "#80CBC4", "#F48FB1"]
-
-
-def color_of(iso3, leader=False):
-    return ACCENT if leader else PALETTE[sum(map(ord, iso3)) % len(PALETTE)]
-
 
 def timeline(now, start, per_year, n_years):
     """Posizione nella serie: (indice dell'anno, frazione verso il successivo)."""
@@ -400,10 +392,6 @@ def fit_size(text, size, max_width, weight="bold"):
     while size > 14 and text_width(text, size, weight) > max_width:
         size *= 0.94
     return size
-
-
-def year_watermark(s, year, x, y, size=300, ha="center", va="center"):
-    big_text(s, x, y, str(year), size, FG, 0.08, ha=ha, va=va, z=1)
 
 
 def cinema_end(s: Slide, v, alpha, note=None):

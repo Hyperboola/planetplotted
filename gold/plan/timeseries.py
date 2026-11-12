@@ -82,41 +82,52 @@ def line_race(rows, ref_year, population=None, min_population=0, n=6, min_cover=
             "n_countries": len(by_year[ref_year]), "list_min_population": min_population}
 
 
-def duel(rows, ref_year, population=None, min_population=0, candidates=10, min_cover=0.9):
-    """Due paesi nel tempo. Preferisce una coppia che si è sorpassata (la storia
-    più interessante), la più recente; altrimenti i primi due di oggi.
-    Un anno senza dato resta vuoto (la linea si interrompe), mai stimato."""
+def duel(rows, ref_year, rivalries, recent=(), min_cover=0.9):
+    """Due grandi nazioni nel tempo, da una lista di rivalità famose
+    (catalog/rivalries.yml): sono i confronti che fanno più engagement.
+
+    rivalries: coppie [iso3, iso3] in ordine di priorità.
+    recent: coppie già usate di recente in un duello, da evitare se possibile.
+    Tra le coppie valide si preferisce una che si è sorpassata, la più recente;
+    altrimenti vale l'ordine della lista. Un anno senza dato resta vuoto, mai stimato.
+    """
     by_year = _by_year(rows)
     years = _years(by_year, ref_year)
     if len(years) < 10:
         return None
-    big = _big(population, min_population)
     serie = lambda iso3: [by_year.get(y, {}).get(iso3, {}).get("value") for y in years]
-    top = sorted((r for iso3, r in by_year[ref_year].items() if big(iso3)),
-                 key=lambda r: r["value"], reverse=True)[:candidates]
-    full = [r for r in top
-            if sum(v is not None for v in serie(r["iso3"])) >= min_cover * len(years)]
-    if len(full) < 2:
+    complete = lambda iso3: (iso3 in by_year[ref_year]
+                             and sum(v is not None for v in serie(iso3)) >= min_cover * len(years))
+    valid = [tuple(pair) for pair in rivalries if all(complete(c) for c in pair)]
+    fresh = [pair for pair in valid if frozenset(pair) not in recent] or valid
+    if not fresh:
         return None
-    best = None
-    for i, a in enumerate(full):
-        for b in full[i + 1:]:
-            pairs = [(y, x - z) for y, x, z in zip(years, serie(a["iso3"]), serie(b["iso3"]))
-                     if x is not None and z is not None]
-            crossings, prev = [], 0.0
-            for year, d in pairs:              # un pareggio esatto non è ancora un sorpasso
-                if d != 0:
-                    if prev * d < 0:
-                        crossings.append(year)
-                    prev = d
-            if crossings and (best is None or crossings[-1] > best[2]):
-                best = (a, b, crossings[-1])
-    a, b, overtake = best if best else (full[0], full[1], None)
+
+    def overtake(pair):
+        """L'anno dell'ultimo sorpasso, o None. Un pareggio non è un sorpasso."""
+        a, b = serie(pair[0]), serie(pair[1])
+        last, prev = None, 0.0
+        for year, x, z in zip(years, a, b):
+            if x is None or z is None:
+                continue
+            d = x - z
+            if d != 0:
+                if prev * d < 0:
+                    last = year
+                prev = d
+        return last
+
+    with_overtake = [(overtake(pair), pair) for pair in fresh if overtake(pair)]
+    if with_overtake:
+        year, (a, b) = max(with_overtake, key=lambda e: e[0])
+    else:
+        year, (a, b) = None, fresh[0]
+    name = lambda iso3: by_year[ref_year][iso3]["name"]
     return {"year": ref_year, "start_year": years[0], "years": years,
             "n_countries": len(by_year[ref_year]),
-            "a": {"iso3": a["iso3"], "name": a["name"], "values": serie(a["iso3"])},
-            "b": {"iso3": b["iso3"], "name": b["name"], "values": serie(b["iso3"])},
-            "overtake_year": overtake}
+            "a": {"iso3": a, "name": name(a), "values": serie(a)},
+            "b": {"iso3": b, "name": name(b), "values": serie(b)},
+            "overtake_year": year}
 
 
 def scroll_ranking(rows, ref_year):

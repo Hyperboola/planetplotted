@@ -41,15 +41,18 @@ def test_smooth_lines_pass_through_the_real_values_and_break_on_gaps():
     assert all(b >= a - 1e-9 for a, b in zip(vs, vs[1:]))
 
 
-def test_duel_finds_the_most_recent_overtake():
+RIVALRIES = [["C00", "C01"], ["C02", "C03"], ["C04", "C05"]]
+
+
+def test_duel_prefers_a_famous_pair_that_overtook():
     def value(k, y):
-        if k == 0:
-            return 105 + 10 * (y - 1995)         # parte dietro e sorpassa nel 2005
-        if k == 1:
+        if k == 2:
+            return 105 + 10 * (y - 1995)         # C02 sorpassa C03 nel 2005
+        if k == 3:
             return 200.0
-        return 1.0
-    p = ts.duel(rows(value), 2024)
-    assert {p["a"]["iso3"], p["b"]["iso3"]} == {"C00", "C01"}
+        return 50.0 + k                          # le altre coppie non si incrociano mai
+    p = ts.duel(rows(value), 2024, RIVALRIES)
+    assert {p["a"]["iso3"], p["b"]["iso3"]} == {"C02", "C03"}
     assert p["overtake_year"] == 2005
 
 
@@ -59,8 +62,18 @@ def test_a_tie_is_not_an_overtake_until_one_is_ahead():
             return 100 + 10 * (y - 1995)         # pari nel 2005, davanti dal 2006
         if k == 1:
             return 200.0
-        return 1.0
-    assert ts.duel(rows(value), 2024)["overtake_year"] == 2006
+        return 50.0 + k
+    assert ts.duel(rows(value), 2024, RIVALRIES)["overtake_year"] == 2006
+
+
+def test_without_overtakes_the_first_pair_of_the_list_wins():
+    p = ts.duel(rows(lambda k, y: 50.0 + k), 2024, RIVALRIES)
+    assert (p["a"]["iso3"], p["b"]["iso3"]) == ("C00", "C01") and p["overtake_year"] is None
+
+
+def test_a_pair_used_recently_is_skipped():
+    p = ts.duel(rows(lambda k, y: 50.0 + k), 2024, RIVALRIES, recent={frozenset(("C00", "C01"))})
+    assert (p["a"]["iso3"], p["b"]["iso3"]) == ("C02", "C03")
 
 
 def test_scroll_ranking_keeps_every_country():
@@ -73,7 +86,7 @@ def payloads():
     out = {
         "bar_race": ts.bar_race(data, 2024),
         "line_race": ts.line_race(data, 2024),
-        "duel": ts.duel(data, 2024),
+        "duel": ts.duel(data, 2024, RIVALRIES),
         "scroll_ranking": ts.scroll_ranking(data, 2024),
     }
     for p in out.values():
