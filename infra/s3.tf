@@ -1,4 +1,4 @@
- # I nomi dei bucket sono unici in tutto il mondo: aggiungiamo il numero dell'account
+# I nomi dei bucket sono unici in tutto il mondo: aggiungiamo il numero dell'account
 locals {
   buckets = {
     bronze  = "planetplotted-bronze-${data.aws_caller_identity.current.account_id}"
